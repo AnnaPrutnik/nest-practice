@@ -1,32 +1,44 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Put } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
-import { ConfigService } from '@nestjs/config';
+import { User } from './schemas/user.schema';
+import { IsValidMongoId } from './dto/isValidId.pipe';
 
-@Controller('user')
+@ApiTags('users')
+@Controller('users')
 export class UserController {
-  constructor(
-    private userService: UserService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private userService: UserService) {}
 
+  @ApiOperation({ summary: 'Create user' })
+  @ApiResponse({ status: 201, type: User })
+  @Post()
+  async addUser(@Body() body: CreateUserDto) {
+    return await this.userService.create(body);
+  }
+
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, type: [User] })
   @Get()
   async getAllUsers() {
     return await this.userService.getAll();
   }
 
-  @Get('bla')
-  async getBlaUser() {
-    return await this.userService.getByEmail('bla');
-  }
-
+  @ApiOperation({ summary: 'Get single users by id' })
+  @ApiResponse({ status: 200, type: User })
   @Get(':id')
-  async getSingleUser(@Param() params) {
+  async getSingleUser(@Param() params: IsValidMongoId) {
     return await this.userService.getById(params.id);
   }
 
-  @Post()
-  async addUser(@Body() body: CreateUserDto) {
-    return await this.userService.create(body);
+  @ApiOperation({ summary: 'Update users by id' })
+  @ApiResponse({ status: 200, type: User })
+  @Put(':id')
+  async updateUser(
+    @Body() body: UpdateUserDto,
+    @Param() params: IsValidMongoId,
+  ) {
+    return await this.userService.update(params.id, body);
   }
 }

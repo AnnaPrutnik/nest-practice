@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Role } from '../interface/role.enum';
 
-export class CreateUserDto {
+export class UpdateUserDto {
   @ApiProperty({
     example: 'username',
     description:
@@ -19,11 +19,12 @@ export class CreateUserDto {
   readonly username: string;
 
   @ApiProperty({ example: 'username@mail.com', description: 'email' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsEmail()
   readonly email: string;
 
   @ApiProperty({ example: '123456', description: 'password' })
+  @IsOptional()
   @IsNotEmpty()
   readonly password: string;
 

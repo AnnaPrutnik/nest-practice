@@ -1,36 +1,58 @@
 import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schema/user.schema';
+import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ROLE } from 'config/role';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from './interface/role.enum';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  create(user: CreateUserDto) {
+  async create(user: CreateUserDto): Promise<User> {
     const username = user.username ? user.username : user.email.split('@')[0];
+    const role = user.role ? user.role : Role.Parent;
     const newUser = {
       ...user,
       username,
-      role: ROLE.CUSTOMER,
+      role,
     };
-    const createdUser = new this.userModel(newUser);
-    return createdUser.save();
+    try {
+      const createdUser = new this.userModel(newUser);
+      return await createdUser.save();
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
-  getAll() {
-    return this.userModel.find({});
+  async getAll(): Promise<User[]> {
+    return await this.userModel.find({});
   }
 
-  getById(id: string) {
-    const user = this.userModel.findById(id);
+  async getById(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException(`No user by id ${id}`);
+    }
     return user;
   }
 
-  getByEmail(email: string) {
-    const user = this.userModel.findOne({ email });
+  async getByEmail(email: string): Promise<User> {
+    const user = await this.userModel.findOne({ email });
     return user;
+  }
+
+  async update(id: string, body: UpdateUserDto): Promise<User> {
+    console.log(body);
+    return await this.userModel.findByIdAndUpdate(
+      id,
+      { ...body },
+      { new: true },
+    );
   }
 }
