@@ -1,5 +1,12 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Body, Request, Get } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiHeader,
+  ApiSecurity,
+} from '@nestjs/swagger';
+import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/signIn.dto';
 import { CreateUserDto } from '../user/dto/create-user.dto';
@@ -10,6 +17,7 @@ import { Public } from 'src/common/decorators/publicRoute.decorator';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Post('signup')
   @ApiOperation({
     summary: 'Register a new user account and obtain access token',
   })
@@ -19,11 +27,11 @@ export class AuthController {
     description: 'Bad request',
   })
   @Public()
-  @Post('signup')
   async singUp(@Body() body: CreateUserDto) {
     return this.authService.signUp(body);
   }
 
+  @Post('login')
   @ApiOperation({
     summary: 'Authenticate user credentials and obtain access token',
   })
@@ -37,8 +45,22 @@ export class AuthController {
     description: 'Bad Credentials',
   })
   @Public()
-  @Post('login')
   async singIn(@Body() body: LoginUserDto) {
     return this.authService.signIn(body.email, body.password);
+  }
+
+  @Get('logout')
+  @ApiOperation({
+    summary: 'Logout user',
+  })
+  @ApiResponse({ status: 200, description: 'User successfully logout' })
+  @ApiHeader({
+    name: 'Authorization',
+    required: true,
+    description: 'The token issued to the current user.',
+  })
+  async logout(@Request() req: ExpressRequest) {
+    console.log(req.user);
+    return this.authService.logout(req.user.id);
   }
 }

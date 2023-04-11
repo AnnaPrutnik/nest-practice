@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '../interface/role.enum';
+import { Role } from 'src/common/enums/role.enum';
 import { NextFunction } from 'express';
 
 export type UserDocument = HydratedDocument<User>;
@@ -46,7 +46,16 @@ export class User {
   })
   role: Role;
 
+  @ApiProperty({ example: '', description: 'user birthday' })
+  @Prop({ default: null })
+  birthday: Date | null;
+
+  @ApiProperty({ description: 'user access token' })
+  @Prop({ default: null })
+  token: string | null;
+
   isValidPassword: (password: string) => Promise<boolean>;
+  removePasswordFromResponse: () => void;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -61,4 +70,9 @@ UserSchema.pre('save', async function (next: NextFunction) {
 
 UserSchema.methods.isValidPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
+};
+
+UserSchema.methods.removePasswordFromResponse = async function () {
+  const { password, ...rest } = this._doc;
+  return rest;
 };

@@ -15,10 +15,11 @@ export class AuthService {
 
   private createToken(id: string) {
     const token = this.jwtService.sign({ id });
+    this.userService.setToken(id, token);
     return token;
   }
 
-  async signUp(userInfo: CreateUserDto) {
+  async signUp(userInfo: CreateUserDto): Promise<{ token: string }> {
     const existedUser = await this.userService.getByEmail(userInfo.email);
     if (existedUser) {
       throw new BadRequestException(
@@ -31,7 +32,7 @@ export class AuthService {
     return { token };
   }
 
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string): Promise<{ token: string }> {
     const user = await this.userService.getByEmail(email);
     const isPasswordValid = await user?.isValidPassword(password);
     if (!isPasswordValid) {
@@ -39,5 +40,9 @@ export class AuthService {
     }
     const token = this.createToken(user._id.toString());
     return { token };
+  }
+
+  async logout(id: string) {
+    return await this.userService.removeToken(id);
   }
 }

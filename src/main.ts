@@ -12,14 +12,17 @@ async function bootstrap() {
     .setTitle('Nanny Hiring App API')
     .setDescription('Description...')
     .setVersion('1.0')
-    .addServer('http:localhost:5000')
     .build();
+
+  const option = {
+    swaggerOptions: {
+      defaultModelsExpandDepth: -1,
+    },
+  };
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { defaultModelsExpandDepth: -1 },
-  });
+  SwaggerModule.setup('api/docs', app, document, option);
 
   app.useGlobalPipes(new ValidationPipe());
   app.use(logger);

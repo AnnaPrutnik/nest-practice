@@ -6,8 +6,9 @@ import {
   IsEnum,
   IsString,
   MinLength,
+  IsDateString,
 } from 'class-validator';
-import { Role } from '../interface/role.enum';
+import { Role } from 'src/common/enums/role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -29,11 +30,17 @@ export class CreateUserDto {
   @MinLength(6)
   readonly password: string;
 
+  @ApiProperty({ example: '', description: 'birthday' })
+  @IsOptional()
+  @IsDateString()
+  readonly birthday: Date;
+
   @ApiProperty({
     example: 'Parent',
     description: 'Role for user from list: Admin, Parent, Nanny',
+    enum: Role,
   })
   @IsOptional()
   @IsEnum(Role, { message: 'Please enter correct role' })
-  readonly role: string;
+  readonly role: Role;
 }

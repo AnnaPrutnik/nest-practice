@@ -1,4 +1,4 @@
-import { Role } from './role.enum';
+import { Role } from 'src/common/enums/role.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class User {
@@ -25,6 +25,17 @@ export class User {
     description: 'user password',
   })
   password: string;
+
+  @ApiProperty({
+    example: '',
+    description: 'user birthday',
+  })
+  birthday: Date | null;
+
+  @ApiProperty({
+    description: 'user access token',
+  })
+  token: string | null;
 
   @ApiProperty({
     example: 'parent',
