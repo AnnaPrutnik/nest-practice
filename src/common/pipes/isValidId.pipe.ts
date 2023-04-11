@@ -2,5 +2,5 @@ import { IsMongoId } from 'class-validator';
 
 export class IsValidMongoId {
   @IsMongoId()
-  id: string;
+  user_id: string;
 }

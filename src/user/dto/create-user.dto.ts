@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsEnum,
   IsString,
+  MinLength,
 } from 'class-validator';
 import { Role } from '../interface/role.enum';
 
@@ -25,6 +26,7 @@ export class CreateUserDto {
 
   @ApiProperty({ example: '123456', description: 'password' })
   @IsNotEmpty()
+  @MinLength(6)
   readonly password: string;
 
   @ApiProperty({

@@ -17,6 +17,13 @@ export type UserDocument = HydratedDocument<User>;
       return ret;
     },
   },
+  toObject: {
+    virtuals: true,
+    transform: function (doc, ret) {
+      delete ret._id;
+      return ret;
+    },
+  },
 })
 export class User {
   @ApiProperty({ example: 'username', description: 'username' })

@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { logger } from './logger/logger.middleware';
+import { logger } from './common/middleware/logger.middleware';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
@@ -12,7 +12,7 @@ async function bootstrap() {
     .setTitle('Nanny Hiring App API')
     .setDescription('Description...')
     .setVersion('1.0')
-    .addTag('nannies')
+    .addServer('http:localhost:5000')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

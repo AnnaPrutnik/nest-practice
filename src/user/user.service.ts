@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from './interface/role.enum';
@@ -14,7 +14,7 @@ import { Role } from './interface/role.enum';
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(user: CreateUserDto): Promise<User> {
+  async create(user: CreateUserDto): Promise<UserDocument> {
     const username = user.username ? user.username : user.email.split('@')[0];
     const role = user.role ? user.role : Role.Parent;
     const newUser = {
@@ -30,11 +30,11 @@ export class UserService {
     }
   }
 
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<UserDocument[]> {
     return await this.userModel.find({});
   }
 
-  async getById(id: string): Promise<User> {
+  async getById(id: string): Promise<UserDocument> {
     const user = await this.userModel.findById(id);
     if (!user) {
       throw new NotFoundException(`No user by id ${id}`);
@@ -42,13 +42,12 @@ export class UserService {
     return user;
   }
 
-  async getByEmail(email: string): Promise<User> {
+  async getByEmail(email: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ email });
     return user;
   }
 
-  async update(id: string, body: UpdateUserDto): Promise<User> {
-    console.log(body);
+  async update(id: string, body: UpdateUserDto): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(
       id,
       { ...body },
