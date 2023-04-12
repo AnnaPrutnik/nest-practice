@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Document } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/common/enums/role.enum';
 import { NextFunction } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -62,7 +63,8 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.pre('save', async function (next: NextFunction) {
   if (this.isModified('password')) {
-    const salt = Number(process.env.SALT_ROUNDS);
+    //will carry out this logic in the passwordService during fixing issue3
+    const salt = 10;
     this.password = await bcrypt.hash(this.password, salt);
   }
   next();
