@@ -3,14 +3,16 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { CreateUserDto } from '../user/dto/create-user.dto';
+import { UserService } from 'src/user/user.service';
+import { PasswordService } from 'src/user/password.service';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private passwordService: PasswordService,
   ) {}
 
   private createToken(id: string) {
@@ -26,15 +28,23 @@ export class AuthService {
         `User with email ${userInfo.email} is already exist`,
       );
     }
-
-    const newUser = await this.userService.create(userInfo);
+    const hashedPassword = await this.passwordService.hashPassword(
+      userInfo.password,
+    );
+    const newUser = await this.userService.create({
+      ...userInfo,
+      password: hashedPassword,
+    });
     const token = this.createToken(newUser._id.toString());
     return { token };
   }
 
   async signIn(email: string, password: string): Promise<{ token: string }> {
     const user = await this.userService.getByEmail(email);
-    const isPasswordValid = await user?.isValidPassword(password);
+    const isPasswordValid = await this.passwordService.verifyPassword(
+      password,
+      user.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Bad Credentials');
     }
