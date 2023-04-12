@@ -10,7 +10,7 @@ import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/signIn.dto';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { Public } from 'src/common/decorators/publicRoute.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
