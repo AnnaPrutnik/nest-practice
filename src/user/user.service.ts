@@ -61,7 +61,7 @@ export class UserService {
     return this.userModel.findByIdAndUpdate(id, { token }, { new: true });
   }
 
-  async removeToken(id: string) {
+  async removeToken(id: string): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(
       id,
       { token: null },
