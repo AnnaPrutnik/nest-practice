@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
+import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RolesGuard } from 'src/common/guards/role.guard';
     AuthModule,
   ],
   providers: [
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
