@@ -15,9 +15,9 @@ export class AuthService {
     private passwordService: PasswordService,
   ) {}
 
-  private createToken(id: string) {
+  private async createToken(id: string) {
     const token = this.jwtService.sign({ id });
-    this.userService.setToken(id, token);
+    await this.userService.setToken(id, token);
     return token;
   }
 
@@ -35,7 +35,7 @@ export class AuthService {
       ...userInfo,
       password: hashedPassword,
     });
-    const token = this.createToken(newUser._id.toString());
+    const token = await this.createToken(newUser._id.toString());
     return { token };
   }
 
@@ -48,7 +48,8 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Bad Credentials');
     }
-    const token = this.createToken(user._id.toString());
+    const token = await this.createToken(user._id.toString());
+
     return { token };
   }
 
