@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from '../common/enums/role.enum';
+import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class UserService {
@@ -17,9 +17,11 @@ export class UserService {
   async create(user: CreateUserDto): Promise<UserDocument> {
     const username = user.username ? user.username : user.email.split('@')[0];
     const role = user.role ? user.role : Role.Parent;
+
     const newUser = {
       ...user,
       username,
+
       role,
     };
     try {
@@ -55,8 +57,8 @@ export class UserService {
     );
   }
 
-  async setToken(id: string, token: string) {
-    return await this.userModel.findByIdAndUpdate(id, { token }, { new: true });
+  setToken(id: string, token: string) {
+    return this.userModel.findByIdAndUpdate(id, { token }, { new: true });
   }
 
   async removeToken(id: string) {

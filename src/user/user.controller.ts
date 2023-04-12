@@ -69,6 +69,6 @@ export class UserController {
     @Param() params: IsValidMongoId,
   ) {
     const user = await this.userService.update(params.user_id, body);
-    return user.removePasswordFromResponse();
+    return user;
   }
 }

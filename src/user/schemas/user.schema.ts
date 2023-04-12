@@ -1,10 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Document } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import { HydratedDocument } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/common/enums/role.enum';
-import { NextFunction } from 'express';
-import { ConfigService } from '@nestjs/config';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -54,27 +51,6 @@ export class User {
   @ApiProperty({ description: 'user access token' })
   @Prop({ default: null })
   token: string | null;
-
-  isValidPassword: (password: string) => Promise<boolean>;
-  removePasswordFromResponse: () => void;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.pre('save', async function (next: NextFunction) {
-  if (this.isModified('password')) {
-    //will carry out this logic in the passwordService during fixing issue3
-    const salt = 10;
-    this.password = await bcrypt.hash(this.password, salt);
-  }
-  next();
-});
-
-UserSchema.methods.isValidPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
-
-UserSchema.methods.removePasswordFromResponse = async function () {
-  const { password, ...rest } = this._doc;
-  return rest;
-};
