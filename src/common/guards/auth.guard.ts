@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from 'src/common/decorators/publicRoute.decorator';
+import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -41,7 +41,7 @@ export class AuthGuard implements CanActivate {
       if (token !== user.token) {
         throw new UnauthorizedException();
       }
-      request.user = user.removePasswordFromResponse();
+      request.user = user;
     } catch {
       throw new UnauthorizedException();
     }
