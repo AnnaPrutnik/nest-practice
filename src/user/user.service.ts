@@ -28,7 +28,8 @@ export class UserService {
       const createdUser = new this.userModel(newUser);
       return createdUser.save();
     } catch (error) {
-      throw new BadRequestException(error.message);
+      console.log(error);
+      throw new BadRequestException('Validation error');
     }
   }
 

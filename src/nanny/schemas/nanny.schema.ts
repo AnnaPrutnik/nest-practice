@@ -1,21 +1,41 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsMongoId,
-  ValidateNested,
-} from 'class-validator';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from 'src/user/schemas/user.schema';
 import { Workdays } from '../interface/workdays.interface';
-import { Type } from 'class-transformer';
-export class CreateNannyDto {
+
+export type NannyDocument = HydratedDocument<Nanny>;
+
+@Schema({
+  timestamps: true,
+  versionKey: false,
+  toJSON: {
+    virtuals: true,
+    transform: function (doc, ret) {
+      delete ret._id;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: function (doc, ret) {
+      delete ret._id;
+      return ret;
+    },
+  },
+})
+export class Nanny {
   @ApiProperty({
     name: 'userId',
     example: '643562541bd65114fc504c1e',
     description: 'id from user collection',
   })
-  @IsNotEmpty()
-  @IsMongoId()
-  userId: string;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  })
+  userId: User;
 
   @ApiProperty({
     name: 'childMinAge',
@@ -23,8 +43,7 @@ export class CreateNannyDto {
     description:
       'The minimum age of the child that a nanny is willing to sit with',
   })
-  @IsNotEmpty()
-  @IsNumber()
+  @Prop({ required: true })
   childMinAge: number;
 
   @ApiProperty({
@@ -33,8 +52,7 @@ export class CreateNannyDto {
     description:
       'The maximum age of the child that a nanny is willing to sit with',
   })
-  @IsNotEmpty()
-  @IsNumber()
+  @Prop({ required: true })
   childMaxAge: number;
 
   @ApiProperty({
@@ -42,8 +60,7 @@ export class CreateNannyDto {
     example: '4',
     description: "The limit for the size of the children's group",
   })
-  @IsNotEmpty()
-  @IsNumber()
+  @Prop({ required: true })
   groupSize: number;
 
   @ApiProperty({
@@ -51,15 +68,15 @@ export class CreateNannyDto {
     example: '4',
     description: 'The payment due to the nanny for one day of work',
   })
-  @IsNotEmpty()
-  @IsNumber()
+  @Prop({ required: true })
   dailyRate: number;
 
   @ApiProperty({
     name: 'workdays',
     description: 'The days of the week when nanny is available',
   })
-  @ValidateNested({ each: true })
-  @Type(() => Workdays)
+  @Prop({ required: true, type: Workdays })
   workdays: Workdays;
 }
+
+export const NannySchema = SchemaFactory.createForClass(Nanny);
