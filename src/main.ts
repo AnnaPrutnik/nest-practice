@@ -12,6 +12,10 @@ async function bootstrap() {
     .setTitle('Nanny Hiring App API')
     .setDescription('Description...')
     .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'Bearer token',
+    )
     .build();
 
   const option = {

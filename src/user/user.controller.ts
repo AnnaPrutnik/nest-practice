@@ -18,6 +18,8 @@ import {
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
+  ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
@@ -27,15 +29,19 @@ import { Request as ExpressRequest } from 'express';
 @ApiTags('user')
 @ApiHeader({
   name: 'Authorization',
+  example: 'Bearer *user-token*',
   required: true,
   description: 'The token issued to the current user.',
 })
+@ApiBearerAuth('Bearer token')
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('all')
   @ApiOperation({ summary: 'Get all users' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false })
   @ApiOkResponse({ description: 'Successful response with list of users' })
   @ApiUnauthorizedResponse({
     description:

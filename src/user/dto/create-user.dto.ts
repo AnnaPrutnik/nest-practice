@@ -30,7 +30,7 @@ export class CreateUserDto {
   @MinLength(6)
   readonly password: string;
 
-  @ApiProperty({ example: '', description: 'birthday' })
+  @ApiProperty({ example: '1986-05-25', description: 'birthday' })
   @IsOptional()
   @IsDateString()
   readonly birthday: Date;
