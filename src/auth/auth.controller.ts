@@ -1,15 +1,9 @@
 import { Controller, Post, Body, Request, Get } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiHeader,
-  ApiSecurity,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiHeader } from '@nestjs/swagger';
 import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/signIn.dto';
-import { CreateUserDto } from '../user/dto/create-user.dto';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('auth')
@@ -60,7 +54,7 @@ export class AuthController {
     description: 'The token issued to the current user.',
   })
   async logout(@Request() req: ExpressRequest) {
-    console.log(req.user);
-    return this.authService.logout(req.user.id);
+    await this.authService.logout(req.user.id);
+    return;
   }
 }

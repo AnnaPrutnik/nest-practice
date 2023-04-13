@@ -49,11 +49,11 @@ export class AuthService {
       throw new UnauthorizedException('Bad Credentials');
     }
     const token = await this.createToken(user._id.toString());
-
     return { token };
   }
 
   async logout(id: string) {
-    return await this.userService.removeToken(id);
+    await this.userService.removeToken(id);
+    return;
   }
 }
