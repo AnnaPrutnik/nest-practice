@@ -52,8 +52,8 @@ export class AuthService {
     return { token };
   }
 
-  async logout(id: string) {
-    await this.userService.removeToken(id);
+  async logout(userId: string) {
+    await this.userService.removeToken(userId);
     return;
   }
 }
