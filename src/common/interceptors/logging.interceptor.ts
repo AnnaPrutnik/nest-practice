@@ -22,14 +22,15 @@ export class LoggingInterceptor implements NestInterceptor {
         const response = context.switchToHttp().getResponse<Response>();
         const delay = Date.now() - now;
         this.logger.log(
-          `${req.method} request to ${req.originalUrl} with response ${response.statusCode} - ${delay}ms`,
+          `${req.method} request to ${req.originalUrl} => status code: ${response.statusCode} - ${delay}ms`,
         );
       }),
       catchError((error) => {
-        const response = context.switchToHttp().getResponse<Response>();
+        const statusCode = error.status;
+        const message = error.response.message;
         const delay = Date.now() - now;
         this.logger.error(
-          `${req.method} request to ${req.originalUrl} with response ${response.statusCode} - ${delay}ms`,
+          `${req.method} request to ${req.originalUrl} => status code: ${statusCode}, error: ${message} - ${delay}ms`,
         );
         return throwError(error);
       }),
