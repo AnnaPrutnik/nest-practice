@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
+import { UserService } from 'src/user/user.service';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 
 @Injectable()
