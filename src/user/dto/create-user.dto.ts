@@ -13,8 +13,7 @@ import { Role } from 'src/common/enums/role.enum';
 export class CreateUserDto {
   @ApiProperty({
     example: 'username',
-    description:
-      'username, not required field, in case without username, it would be generated from email',
+    description: 'username, not required field',
   })
   @IsOptional()
   @IsString()
@@ -36,8 +35,8 @@ export class CreateUserDto {
   readonly birthday: Date;
 
   @ApiProperty({
-    example: 'Parent',
-    description: 'Role for user from list: Admin, Parent, Nanny',
+    example: 'parent',
+    description: 'Role for user from list: admin, parent, nanny',
     enum: Role,
   })
   @IsOptional()
