@@ -26,18 +26,18 @@ export class UserService {
     };
     try {
       const createdUser = new this.userModel(newUser);
-      return await createdUser.save();
+      return createdUser.save();
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
   async getAll(): Promise<UserDocument[]> {
-    return await this.userModel.find({});
+    return this.userModel.find({}).select('-password -token');
   }
 
   async getById(id: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findById(id).select('-password');
     if (!user) {
       throw new NotFoundException(`No user by id ${id}`);
     }
@@ -45,27 +45,22 @@ export class UserService {
   }
 
   async getByEmail(email: string): Promise<UserDocument> {
-    const user = await this.userModel.findOne({ email });
-    return user;
+    return this.userModel.findOne({ email });
   }
 
   async update(id: string, body: UpdateUserDto): Promise<UserDocument> {
-    return await this.userModel.findByIdAndUpdate(
-      id,
-      { ...body },
-      { new: true },
-    );
+    return this.userModel
+      .findByIdAndUpdate(id, { ...body }, { new: true })
+      .select('-password -token');
   }
 
-  setToken(id: string, token: string) {
-    return this.userModel.findByIdAndUpdate(id, { token }, { new: true });
+  async setToken(id: string, token: string) {
+    await this.userModel.findByIdAndUpdate(id, { token });
+    return;
   }
 
-  async removeToken(id: string): Promise<UserDocument> {
-    return await this.userModel.findByIdAndUpdate(
-      id,
-      { token: null },
-      { new: true },
-    );
+  async removeToken(id: string) {
+    await this.userModel.findByIdAndUpdate(id, { token: null });
+    return;
   }
 }

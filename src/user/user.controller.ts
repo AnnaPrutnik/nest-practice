@@ -32,7 +32,8 @@ export class UserController {
       'Missing header with authorization token or token is not valid.',
   })
   async getAllUsers() {
-    return await this.userService.getAll();
+    const users = await this.userService.getAll();
+    return users;
   }
 
   @Get('profile')
