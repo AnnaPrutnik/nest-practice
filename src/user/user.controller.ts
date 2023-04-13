@@ -45,8 +45,7 @@ export class UserController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
   ) {
-    const users = await this.userService.getAll(page, limit);
-    return users;
+    return this.userService.getAll(page, limit);
   }
 
   @Get('profile')

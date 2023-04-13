@@ -32,13 +32,16 @@ export class UserService {
     }
   }
 
-  async getAll(page, limit): Promise<UserDocument[]> {
+  async getAll(page, limit) {
     const skip = limit * (page - 1);
-    return this.userModel
+    const users = await this.userModel
       .find({})
       .select('-password -token')
       .limit(limit)
       .skip(skip);
+    const total = await this.userModel.find({}).count();
+    const pages = Math.ceil(total / limit);
+    return { users, total, page, pages };
   }
 
   async getById(id: string): Promise<UserDocument> {
