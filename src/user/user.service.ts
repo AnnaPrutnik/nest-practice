@@ -44,10 +44,10 @@ export class UserService {
     return { users, total, page, pages };
   }
 
-  async getById(id: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(id).select('-password');
+  async getById(userId: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId).select('-password');
     if (!user) {
-      throw new NotFoundException(`No user by id ${id}`);
+      throw new NotFoundException(`No user by id ${userId}`);
     }
     return user;
   }
@@ -56,19 +56,19 @@ export class UserService {
     return this.userModel.findOne({ email });
   }
 
-  async update(id: string, body: UpdateUserDto): Promise<UserDocument> {
+  async update(userId: string, body: UpdateUserDto): Promise<UserDocument> {
     return this.userModel
-      .findByIdAndUpdate(id, { ...body }, { new: true })
+      .findByIdAndUpdate(userId, { ...body }, { new: true })
       .select('-password -token');
   }
 
-  async setToken(id: string, token: string) {
-    await this.userModel.findByIdAndUpdate(id, { token });
+  async setToken(userId: string, token: string) {
+    await this.userModel.findByIdAndUpdate(userId, { token });
     return;
   }
 
-  async removeToken(id: string) {
-    await this.userModel.findByIdAndUpdate(id, { token: null });
+  async removeToken(userId: string) {
+    await this.userModel.findByIdAndUpdate(userId, { token: null });
     return;
   }
 }

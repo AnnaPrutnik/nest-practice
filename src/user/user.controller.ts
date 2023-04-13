@@ -61,14 +61,14 @@ export class UserController {
     return req.user;
   }
 
-  @Put(':user_id')
+  @Put(':userId')
   @ApiOperation({ summary: 'Update user by id' })
-  @ApiParam({ name: 'user_id', description: 'user id', type: String })
+  @ApiParam({ name: 'userId', description: 'user id', type: String })
   @ApiOkResponse({
     description: 'User profile successfully updated',
   })
   @ApiBadRequestResponse({
-    description: 'Bad request. User_id is not valid.',
+    description: 'Bad request. User id is not valid.',
   })
   @ApiUnauthorizedResponse({
     description:
@@ -81,7 +81,7 @@ export class UserController {
     @Body() body: UpdateUserDto,
     @Param() params: IsValidMongoId,
   ) {
-    const user = await this.userService.update(params.user_id, body);
+    const user = await this.userService.update(params.userId, body);
     return user;
   }
 }
