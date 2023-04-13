@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Body, Put, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Body,
+  Put,
+  Request,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiTags,
@@ -31,8 +41,11 @@ export class UserController {
     description:
       'Missing header with authorization token or token is not valid.',
   })
-  async getAllUsers() {
-    const users = await this.userService.getAll();
+  async getAllUsers(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  ) {
+    const users = await this.userService.getAll(page, limit);
     return users;
   }
 

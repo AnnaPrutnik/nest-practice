@@ -32,8 +32,13 @@ export class UserService {
     }
   }
 
-  async getAll(): Promise<UserDocument[]> {
-    return this.userModel.find({}).select('-password -token');
+  async getAll(page, limit): Promise<UserDocument[]> {
+    const skip = limit * (page - 1);
+    return this.userModel
+      .find({})
+      .select('-password -token')
+      .limit(limit)
+      .skip(skip);
   }
 
   async getById(id: string): Promise<UserDocument> {
