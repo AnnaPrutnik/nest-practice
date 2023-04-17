@@ -9,15 +9,6 @@ import { Workdays } from '../interface/workdays.interface';
 import { Type } from 'class-transformer';
 export class CreateNannyDto {
   @ApiProperty({
-    name: 'userId',
-    example: '643562541bd65114fc504c1e',
-    description: 'id from user collection',
-  })
-  @IsNotEmpty()
-  @IsMongoId()
-  userId: string;
-
-  @ApiProperty({
     name: 'childMinAge',
     example: '3',
     description:
@@ -25,7 +16,7 @@ export class CreateNannyDto {
   })
   @IsNotEmpty()
   @IsNumber()
-  childMinAge: number;
+  readonly childMinAge: number;
 
   @ApiProperty({
     name: 'childMaxAge',
@@ -35,7 +26,7 @@ export class CreateNannyDto {
   })
   @IsNotEmpty()
   @IsNumber()
-  childMaxAge: number;
+  readonly childMaxAge: number;
 
   @ApiProperty({
     name: 'groupSize',
@@ -44,7 +35,7 @@ export class CreateNannyDto {
   })
   @IsNotEmpty()
   @IsNumber()
-  groupSize: number;
+  readonly groupSize: number;
 
   @ApiProperty({
     name: 'dailyRate',
@@ -53,7 +44,7 @@ export class CreateNannyDto {
   })
   @IsNotEmpty()
   @IsNumber()
-  dailyRate: number;
+  readonly dailyRate: number;
 
   @ApiProperty({
     name: 'workdays',
@@ -61,5 +52,5 @@ export class CreateNannyDto {
   })
   @ValidateNested({ each: true })
   @Type(() => Workdays)
-  workdays: Workdays;
+  readonly workdays: Workdays;
 }

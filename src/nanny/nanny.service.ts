@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateNannyDto } from './dto/create-nanny.dto';
-import { UpdateNannyDto } from './dto/update-nanny.dto';
 import { Nanny } from './schemas/nanny.schema';
+import { UpdateNannyDto } from './dto/update-nanny.dto';
+
 import { UserService } from 'src/user/user.service';
 import { Role } from 'src/common/enums/role.enum';
 
@@ -19,36 +19,45 @@ export class NannyService {
     private userService: UserService,
   ) {}
 
-  async create(body: CreateNannyDto) {
-    const existNanny = await this.nannyModel.findOne({ userId: body.userId });
+  async create(body: Nanny) {
+    const existNanny = await this.nannyModel.findOne({ id: body._id });
     if (existNanny) {
       throw new ConflictException('You have already registered as nanny');
     }
-    const user = await this.userService.getById(body.userId);
+    const user = await this.userService.getById(body._id.toString());
     if (user.role !== Role.Nanny) {
       throw new ForbiddenException('Role only should be nanny');
     }
     try {
-      const nanny = new this.nannyModel(body);
-      return nanny.save();
+      const nanny = await this.nannyModel.create(body);
+      return nanny.populate('user', 'username birthday');
     } catch (error) {
+      console.log('catch during saving nanny');
       throw new BadRequestException(error.message);
     }
   }
 
-  findAll() {
-    return `This action returns all nanny`;
+  async findAll(limit: number, page: number) {
+    const skip = limit * (page - 1);
+    const nannies = await this.nannyModel
+      .find({})
+      .limit(limit)
+      .skip(skip)
+      .populate('user', 'username birthday');
+    const total = await this.nannyModel.find({}).count();
+    const pages = Math.ceil(total / limit);
+    return { nannies, total, page, pages };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} nanny`;
+  async findOne(nannyId: string) {
+    return await this.nannyModel.findById(nannyId);
   }
 
-  update(id: number, updateNannyDto: UpdateNannyDto) {
-    return `This action updates a #${id} nanny`;
+  update(nannyId: string, updateNannyDto: UpdateNannyDto) {
+    return `This action updates a #${nannyId} nanny`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} nanny`;
+  remove(nannyId: string) {
+    return `This action removes a #${nannyId} nanny`;
   }
 }

@@ -7,6 +7,7 @@ import { Workdays } from '../interface/workdays.interface';
 export type NannyDocument = HydratedDocument<Nanny>;
 
 @Schema({
+  _id: false,
   timestamps: true,
   versionKey: false,
   toJSON: {
@@ -26,16 +27,15 @@ export type NannyDocument = HydratedDocument<Nanny>;
 })
 export class Nanny {
   @ApiProperty({
-    name: 'userId',
+    name: 'id',
     example: '643562541bd65114fc504c1e',
-    description: 'id from user collection',
+    description: 'nanny id - the same id in user collection',
   })
   @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'User',
     required: true,
+    index: true,
   })
-  userId: User;
+  _id: string;
 
   @ApiProperty({
     name: 'childMinAge',
@@ -80,3 +80,10 @@ export class Nanny {
 }
 
 export const NannySchema = SchemaFactory.createForClass(Nanny);
+
+NannySchema.virtual('user', {
+  ref: 'User',
+  localField: '_id',
+  foreignField: '_id',
+  justOne: true,
+});

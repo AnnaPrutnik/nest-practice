@@ -11,7 +11,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  monday: boolean;
+  readonly monday: boolean;
 
   @ApiProperty({
     name: 'tuesday',
@@ -21,7 +21,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  tuesday: boolean;
+  readonly tuesday: boolean;
 
   @ApiProperty({
     name: 'wednesday',
@@ -31,7 +31,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  wednesday: boolean;
+  readonly wednesday: boolean;
 
   @ApiProperty({
     name: 'thursday',
@@ -41,7 +41,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  thursday: boolean;
+  readonly thursday: boolean;
 
   @ApiProperty({
     name: 'friday',
@@ -51,7 +51,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  friday: boolean;
+  readonly friday: boolean;
 
   @ApiProperty({
     name: 'saturday',
@@ -61,7 +61,7 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  saturday: boolean;
+  readonly saturday: boolean;
 
   @ApiProperty({
     name: 'sunday',
@@ -71,5 +71,5 @@ export class Workdays {
   @IsNotEmpty()
   @IsBoolean()
   @Prop({ type: Boolean, required: true })
-  sunday: boolean;
+  readonly sunday: boolean;
 }

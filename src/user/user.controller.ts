@@ -39,6 +39,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('all')
+  //Role access: only for admin
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false })
@@ -55,6 +56,7 @@ export class UserController {
   }
 
   @Get('profile')
+  //Role access: anybody
   @ApiOperation({
     summary: "Get user's profile",
   })
@@ -68,6 +70,9 @@ export class UserController {
   }
 
   @Put(':userId')
+  //Role access: maybe this route would be accessible only for admin
+  //and then is going to add the route with PUT method to 'profile' for updating user profile
+  //by using id from req.user ??
   @ApiOperation({ summary: 'Update user by id' })
   @ApiParam({ name: 'userId', description: 'user id', type: String })
   @ApiOkResponse({
