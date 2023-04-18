@@ -24,10 +24,6 @@ export type UserDocument = HydratedDocument<User>;
   },
 })
 export class User {
-  @ApiProperty({ example: 'username', description: 'username' })
-  @Prop()
-  username: string;
-
   @ApiProperty({ example: 'username@mail.com', description: 'email' })
   @Prop({ required: true, unique: true })
   email: string;
@@ -43,10 +39,6 @@ export class User {
     enum: Role,
   })
   role: Role;
-
-  @ApiProperty({ example: '', description: 'user birthday' })
-  @Prop({ default: null })
-  birthday: Date | null;
 
   @ApiProperty({ description: 'user access token' })
   @Prop({ default: null })

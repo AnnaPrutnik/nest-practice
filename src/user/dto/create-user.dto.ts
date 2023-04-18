@@ -4,21 +4,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsEnum,
-  IsString,
   MinLength,
-  IsDateString,
 } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
 
 export class CreateUserDto {
-  @ApiProperty({
-    example: 'username',
-    description: 'username, not required field',
-  })
-  @IsOptional()
-  @IsString()
-  readonly username: string;
-
   @ApiProperty({ example: 'username@mail.com', description: 'email' })
   @IsNotEmpty()
   @IsEmail()
@@ -28,11 +18,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(6)
   readonly password: string;
-
-  @ApiProperty({ example: '1986-05-25', description: 'birthday' })
-  @IsOptional()
-  @IsDateString()
-  readonly birthday: Date;
 
   @ApiProperty({
     example: 'parent',

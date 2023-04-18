@@ -4,8 +4,8 @@ import {
   Post,
   Body,
   Put,
-  Param,
   Delete,
+  Param,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
@@ -14,7 +14,6 @@ import {
 import {
   ApiOperation,
   ApiTags,
-  ApiParam,
   ApiHeader,
   ApiOkResponse,
   ApiUnauthorizedResponse,
@@ -22,13 +21,13 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
-  ApiQuery,
   ApiBearerAuth,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { NannyService } from './nanny.service';
 import { CreateNannyDto } from './dto/create-nanny.dto';
 import { UpdateNannyDto } from './dto/update-nanny.dto';
+import { IsValidId } from 'src/common/pipes/isValidId.pipe';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { Request as ExpressRequest } from 'express';
@@ -47,7 +46,7 @@ export class NannyController {
 
   @Post()
   //Role access: nanny
-  @Roles(Role.Nanny)
+  // @Roles(Role.Nanny)
   @ApiOperation({ summary: 'Create new nanny' })
   @ApiCreatedResponse({ description: 'Nanny successfully created' })
   @ApiUnauthorizedResponse({
@@ -62,26 +61,18 @@ export class NannyController {
   @ApiConflictResponse({
     description: 'Conflict error. Nanny with such user id already exists',
   })
-  create(
-    @Body() createNannyDto: CreateNannyDto,
-    @Request() req: ExpressRequest,
-  ) {
-    return this.nannyService.create({ ...createNannyDto, _id: req.user.id });
+  create(@Body() body: CreateNannyDto, @Request() req: ExpressRequest) {
+    return this.nannyService.create(body, req.user.id);
   }
 
   @Get('all')
-  //Role access: admin
-  @Roles(Role.Admin)
+  //Role access: anybody
   @ApiOkResponse({
     description: 'Successful response with the list of nannies',
   })
   @ApiUnauthorizedResponse({
     description:
       'Missing header with authorization token or token is not valid.',
-  })
-  @ApiForbiddenResponse({
-    description:
-      'Forbidden error. User are not authorized to access this resource',
   })
   findAll(
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
@@ -92,20 +83,53 @@ export class NannyController {
 
   @Get(':nannyId')
   //Role access: anybody
-  findOne(@Param('nannyId') nannyId: string) {
+  @ApiOkResponse({
+    description: 'Successful response with nanny data',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @ApiUnauthorizedResponse({
+    description:
+      'Missing header with authorization token or token is not valid.',
+  })
+  @ApiNotFoundResponse({ description: 'There is no nanny with such id' })
+  async findOne(@Param('nannyId', IsValidId) nannyId: string) {
     return this.nannyService.findOne(nannyId);
   }
 
   @Put(':nannyId')
+  //Role access: nanny and admin
+  // @Roles(Role.Admin, Role.Nanny)
+  @ApiOkResponse({
+    description: 'Successful response with updated nanny data',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @ApiForbiddenResponse({
+    description:
+      'Forbidden error. User are not authorized to access this resource',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Missing header with authorization token or token is not valid.',
+  })
   update(
-    @Param('nannyId') nannyId: string,
+    @Param('nannyId', IsValidId) nannyId: string,
     @Body() updateNannyDto: UpdateNannyDto,
   ) {
     return this.nannyService.update(nannyId, updateNannyDto);
   }
 
   @Delete(':nannyId')
-  remove(@Param('nannyId') nannyId: string) {
-    return this.nannyService.remove(nannyId);
+  //Role access: admin, nanny
+  @ApiOkResponse({
+    description: 'Successful response',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request' })
+  @ApiUnauthorizedResponse({
+    description:
+      'Missing header with authorization token or token is not valid.',
+  })
+  @ApiNotFoundResponse({ description: 'There is no nanny with such id' })
+  async delete(@Param('nannyId', IsValidId) nannyId: string) {
+    return this.nannyService.delete(nannyId);
   }
 }

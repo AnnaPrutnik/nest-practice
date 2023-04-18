@@ -15,13 +15,10 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(user: CreateUserDto): Promise<UserDocument> {
-    const username = user.username ? user.username : user.email.split('@')[0];
     const role = user.role ? user.role : Role.Parent;
 
     const newUser = {
       ...user,
-      username,
-
       role,
     };
     try {
@@ -58,9 +55,14 @@ export class UserService {
   }
 
   async update(userId: string, body: UpdateUserDto): Promise<UserDocument> {
-    return this.userModel
-      .findByIdAndUpdate(userId, { ...body }, { new: true })
-      .select('-password -token');
+    try {
+      const updatedUser = await this.userModel
+        .findByIdAndUpdate(userId, { ...body }, { new: true })
+        .select('-password -token');
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException('Bad Request');
+    }
   }
 
   async setToken(userId: string, token: string) {

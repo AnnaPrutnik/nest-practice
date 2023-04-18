@@ -1,75 +1,84 @@
-import { Prop } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+import { IsBoolean, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsBoolean } from 'class-validator';
 
+export type WorkdaysDocument = HydratedDocument<Workdays>;
+
+@Schema({
+  _id: false,
+  versionKey: false,
+})
 export class Workdays {
   @ApiProperty({
     name: 'monday',
     example: 'true',
     description: 'available on monday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly monday: boolean;
+  @Prop({ type: Boolean, default: false })
+  monday: boolean;
 
   @ApiProperty({
     name: 'tuesday',
     example: 'true',
     description: 'available on tuesday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly tuesday: boolean;
+  @Prop({ type: Boolean, default: false })
+  tuesday: boolean;
 
   @ApiProperty({
     name: 'wednesday',
     example: 'true',
     description: 'available on wednesday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly wednesday: boolean;
+  @Prop({ type: Boolean, default: false })
+  wednesday: boolean;
 
   @ApiProperty({
     name: 'thursday',
     example: 'true',
     description: 'available on thursday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly thursday: boolean;
+  @Prop({ type: Boolean, default: false })
+  thursday: boolean;
 
   @ApiProperty({
     name: 'friday',
     example: 'true',
     description: 'available on friday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly friday: boolean;
+  @Prop({ type: Boolean, default: false })
+  friday: boolean;
 
   @ApiProperty({
     name: 'saturday',
     example: 'true',
     description: 'available on saturday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly saturday: boolean;
+  @Prop({ type: Boolean, default: false })
+  saturday: boolean;
 
   @ApiProperty({
     name: 'sunday',
     example: 'true',
     description: 'available on sunday',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, required: true })
-  readonly sunday: boolean;
+  @Prop({ type: Boolean, default: false })
+  sunday: boolean;
 }
+
+export const WorkdaysSchema = SchemaFactory.createForClass(Workdays);

@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from 'src/user/schemas/user.schema';
-import { Workdays } from '../interface/workdays.interface';
+import { WorkdaysSchema, Workdays } from './workdays.schema';
+import { Exclude } from 'class-transformer';
 
 export type NannyDocument = HydratedDocument<Nanny>;
 
@@ -14,6 +14,7 @@ export type NannyDocument = HydratedDocument<Nanny>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
+      delete ret.isActive;
       return ret;
     },
   },
@@ -21,6 +22,7 @@ export type NannyDocument = HydratedDocument<Nanny>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
+      delete ret.isActive;
       return ret;
     },
   },
@@ -36,6 +38,18 @@ export class Nanny {
     index: true,
   })
   _id: string;
+
+  @ApiProperty({ example: 'firstName', description: 'first name' })
+  @Prop()
+  firstName: string;
+
+  @ApiProperty({ example: 'lastName', description: 'last name' })
+  @Prop()
+  lastName: string;
+
+  @ApiProperty({ example: '1973-15-01', description: 'nanny birthday' })
+  @Prop()
+  birthday: Date;
 
   @ApiProperty({
     name: 'childMinAge',
@@ -75,15 +89,11 @@ export class Nanny {
     name: 'workdays',
     description: 'The days of the week when nanny is available',
   })
-  @Prop({ required: true, type: Workdays })
+  @Prop({ type: WorkdaysSchema, required: true })
   workdays: Workdays;
+
+  @Prop({ type: Boolean, default: true })
+  isActive: boolean;
 }
 
 export const NannySchema = SchemaFactory.createForClass(Nanny);
-
-NannySchema.virtual('user', {
-  ref: 'User',
-  localField: '_id',
-  foreignField: '_id',
-  justOne: true,
-});

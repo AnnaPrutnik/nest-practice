@@ -23,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
-import { IsValidMongoId } from 'src/common/pipes/isValidId.pipe';
+import { IsValidId } from 'src/common/pipes/isValidId.pipe';
 import { Request as ExpressRequest } from 'express';
 
 @ApiTags('user')
@@ -90,9 +90,9 @@ export class UserController {
   })
   async updateUser(
     @Body() body: UpdateUserDto,
-    @Param() params: IsValidMongoId,
+    @Param('userId', IsValidId) userId: string,
   ) {
-    const user = await this.userService.update(params.userId, body);
+    const user = await this.userService.update(userId, body);
     return user;
   }
 }
