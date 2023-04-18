@@ -16,7 +16,6 @@ export class UserService {
 
   async create(user: CreateUserDto): Promise<UserDocument> {
     const role = user.role ? user.role : Role.Parent;
-
     const newUser = {
       ...user,
       role,
@@ -34,7 +33,7 @@ export class UserService {
     const skip = limit * (page - 1);
     const users = await this.userModel
       .find({})
-      .select('-password -token')
+      .select('-password')
       .limit(limit)
       .skip(skip);
     const total = await this.userModel.find({}).count();
@@ -58,20 +57,10 @@ export class UserService {
     try {
       const updatedUser = await this.userModel
         .findByIdAndUpdate(userId, { ...body }, { new: true })
-        .select('-password -token');
+        .select('-password ');
       return updatedUser;
     } catch (error) {
       throw new BadRequestException('Bad Request');
     }
-  }
-
-  async setToken(userId: string, token: string) {
-    await this.userModel.findByIdAndUpdate(userId, { token });
-    return;
-  }
-
-  async removeToken(userId: string) {
-    await this.userModel.findByIdAndUpdate(userId, { token: null });
-    return;
   }
 }

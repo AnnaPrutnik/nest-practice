@@ -49,7 +49,13 @@ export class AuthController {
     return this.authService.signIn(body.email, body.password);
   }
 
+  @Get('refresh')
+  async refresh() {
+    return 'refresh';
+  }
+
   @Get('logout')
+  @Public()
   @ApiOperation({
     summary: 'Logout user',
   })
@@ -61,7 +67,8 @@ export class AuthController {
   })
   @ApiBearerAuth('Bearer token')
   async logout(@Request() req: ExpressRequest) {
-    await this.authService.logout(req.user.id);
+    console.log(req.headers);
+    // await this.authService.logout(req.user.id);
     return;
   }
 }

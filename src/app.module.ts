@@ -8,6 +8,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
 import { NannyModule } from './nanny/nanny.module';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { NannyModule } from './nanny/nanny.module';
     UserModule,
     AuthModule,
     NannyModule,
+    TokenModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },

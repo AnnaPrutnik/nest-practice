@@ -62,7 +62,9 @@ export class NannyController {
     description: 'Conflict error. Nanny with such user id already exists',
   })
   create(@Body() body: CreateNannyDto, @Request() req: ExpressRequest) {
-    return this.nannyService.create(body, req.user.id);
+    if (req.user.id) {
+      return this.nannyService.create(body, req.user.id);
+    }
   }
 
   @Get('all')

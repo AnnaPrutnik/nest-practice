@@ -5,21 +5,16 @@ import {
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PasswordService } from 'src/user/password.service';
+import { TokenService } from 'src/token/token.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { JwtService } from '@nestjs/jwt';
+
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private jwtService: JwtService,
+    private tokenService: TokenService,
     private passwordService: PasswordService,
   ) {}
-
-  private async createToken(id: string) {
-    const token = this.jwtService.sign({ id });
-    await this.userService.setToken(id, token);
-    return token;
-  }
 
   async signUp(userInfo: CreateUserDto): Promise<{ token: string }> {
     const existedUser = await this.userService.getByEmail(userInfo.email);
@@ -35,7 +30,7 @@ export class AuthService {
       ...userInfo,
       password: hashedPassword,
     });
-    const token = await this.createToken(newUser._id.toString());
+    const token = await this.tokenService.create(newUser._id.toString());
     return { token };
   }
 
@@ -48,12 +43,12 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Bad Credentials');
     }
-    const token = await this.createToken(user._id.toString());
+    const token = await this.tokenService.create(user._id.toString());
     return { token };
   }
 
   async logout(userId: string) {
-    await this.userService.removeToken(userId);
+    // await this.tokenService.remove(userId);
     return;
   }
 }

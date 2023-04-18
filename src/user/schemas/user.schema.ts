@@ -39,10 +39,6 @@ export class User {
     enum: Role,
   })
   role: Role;
-
-  @ApiProperty({ description: 'user access token' })
-  @Prop({ default: null })
-  token: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

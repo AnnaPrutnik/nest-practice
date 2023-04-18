@@ -13,7 +13,7 @@ import { TokenService } from 'src/token/token.service';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class RefreshGuard implements CanActivate {
   constructor(
     private tokenService: TokenService,
     private configService: ConfigService,
@@ -22,23 +22,18 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const publicRoute = this.reflector.get<boolean | undefined>(
-      IS_PUBLIC_KEY,
-      context.getHandler(),
-    );
-    if (publicRoute) {
-      return true;
-    }
-    const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromHeader(request);
-    if (!token) {
+    const request = context.switchToHttp().getRequest();
+    const refresh = request.cookie('');
+    if (!refresh) {
       throw new UnauthorizedException();
     }
-
     try {
-      const payload = await this.tokenService.verify(token);
-      if (!payload) throw new UnauthorizedException();
-      request.user = payload;
+      //   const payload = await this.tokenService.verify();
+      // const user = await this.userService.getById(payload.id);
+      // if (token !== user.token) {
+      //   throw new UnauthorizedException();
+      // }
+      // request.user = user;
     } catch {
       throw new UnauthorizedException();
     }
