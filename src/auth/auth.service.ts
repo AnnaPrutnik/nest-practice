@@ -16,7 +16,7 @@ export class AuthService {
     private passwordService: PasswordService,
   ) {}
 
-  async signUp(userInfo: CreateUserDto): Promise<{ token: string }> {
+  async signUp(userInfo: CreateUserDto, userAgent: string) {
     const existedUser = await this.userService.getByEmail(userInfo.email);
     if (existedUser) {
       throw new BadRequestException(
@@ -30,11 +30,10 @@ export class AuthService {
       ...userInfo,
       password: hashedPassword,
     });
-    const token = await this.tokenService.create(newUser._id.toString());
-    return { token };
+    return this.tokenService.create(newUser._id.toString(), userAgent);
   }
 
-  async signIn(email: string, password: string): Promise<{ token: string }> {
+  async signIn(email: string, password: string, userAgent) {
     const user = await this.userService.getByEmail(email);
     const isPasswordValid = await this.passwordService.verifyPassword(
       password,
@@ -43,12 +42,15 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Bad Credentials');
     }
-    const token = await this.tokenService.create(user._id.toString());
-    return { token };
+    return this.tokenService.create(user._id.toString(), userAgent);
   }
 
-  async logout(userId: string) {
-    // await this.tokenService.remove(userId);
+  async refresh(refreshToken: string, userAgent: string) {
+    return this.tokenService.updateRefreshToken(refreshToken, userAgent);
+  }
+
+  async logout(userId: string, userAgent: string) {
+    await this.tokenService.removeRefreshToken(userId, userAgent);
     return;
   }
 }

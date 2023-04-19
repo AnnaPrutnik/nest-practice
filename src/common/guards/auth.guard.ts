@@ -16,8 +16,6 @@ import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 export class AuthGuard implements CanActivate {
   constructor(
     private tokenService: TokenService,
-    private configService: ConfigService,
-    private userService: UserService,
     private reflector: Reflector,
   ) {}
 
@@ -31,12 +29,13 @@ export class AuthGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
+
     if (!token) {
       throw new UnauthorizedException();
     }
 
     try {
-      const payload = await this.tokenService.verify(token);
+      const payload = await this.tokenService.verifyAccessToken(token);
       if (!payload) throw new UnauthorizedException();
       request.user = payload;
     } catch {

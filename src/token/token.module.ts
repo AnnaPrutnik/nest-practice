@@ -13,6 +13,7 @@ import { Token, TokenSchema } from './schemas/token.schema';
       useFactory: (config: ConfigService) => {
         return {
           secret: config.get<string>('JWT_SECRET'),
+
           signOptions: {
             expiresIn: config.get<string | number>('JWT_EXPIRE'),
           },

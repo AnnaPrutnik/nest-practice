@@ -24,7 +24,8 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 import { IsValidId } from 'src/common/pipes/isValidId.pipe';
-import { Request as ExpressRequest } from 'express';
+import { User } from 'src/common/decorators/user.decorator';
+import { RequestUser } from 'src/common/interfaces/requestUser.interface';
 
 @ApiTags('user')
 @ApiHeader({
@@ -65,8 +66,8 @@ export class UserController {
     description:
       'Missing header with authorization token or token is not valid.',
   })
-  getProfile(@Request() req: ExpressRequest) {
-    return req.user;
+  getProfile(@User() user: RequestUser) {
+    return user;
   }
 
   @Put(':userId')
