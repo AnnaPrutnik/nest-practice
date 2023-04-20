@@ -52,7 +52,10 @@ export class TokenService {
   }
 
   async create(userId: string, userAgent: string) {
-    //TODO: check if user logged in from this device???
+    const existedToken = await this.tokenModel.findOne({ userId, userAgent });
+    if (existedToken) {
+      await this.tokenModel.findByIdAndDelete(existedToken._id);
+    }
     const { refreshToken, accessToken } = await this.generateTokens(userId);
     await this.saveRefreshToken(refreshToken, userId, userAgent);
     return { accessToken, refreshToken };
