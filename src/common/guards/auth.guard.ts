@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { UserService } from 'src/user/user.service';
@@ -17,6 +16,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private tokenService: TokenService,
     private reflector: Reflector,
+    private userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -37,7 +37,8 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = await this.tokenService.verifyAccessToken(token);
       if (!payload) throw new UnauthorizedException();
-      request.user = payload;
+      const user = await this.userService.getById(payload.id);
+      request.user = { ...payload, role: user.role };
     } catch {
       throw new UnauthorizedException();
     }

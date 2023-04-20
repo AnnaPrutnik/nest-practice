@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Token } from './schemas/token.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class TokenService {
@@ -38,9 +39,12 @@ export class TokenService {
     return;
   }
 
-  private verifyRefreshToken(expires: Date, userAgent: string) {
-    const isExpireToken = expires < new Date();
-    const isSameUserAgent = userAgent === userAgent;
+  private async verifyRefreshToken(
+    tokenDoc: Token & { _id: Types.ObjectId },
+    userAgent: string,
+  ) {
+    const isExpireToken = tokenDoc.expires < new Date();
+    const isSameUserAgent = userAgent === tokenDoc.userAgent;
     if (isExpireToken || !isSameUserAgent) {
       return false;
     }
@@ -69,7 +73,7 @@ export class TokenService {
     if (!tokenDoc) {
       return null;
     }
-    const isValidToken = this.verifyRefreshToken(tokenDoc.expires, userAgent);
+    const isValidToken = this.verifyRefreshToken(tokenDoc, userAgent);
     if (!isValidToken) {
       return null;
     }

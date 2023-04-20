@@ -24,7 +24,7 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { User } from 'src/common/decorators/user.decorator';
 import { RequestUser } from 'src/common/interfaces/requestUser.interface';
-import { UserAgent } from 'src/common/decorators/userAgent.decorator';
+import { UserAgent } from 'src/common/decorators/refreshData.decorator';
 import { Cookie } from 'src/common/decorators/cookies.decorator';
 
 @ApiTags('auth')

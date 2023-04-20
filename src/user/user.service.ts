@@ -3,12 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from 'src/common/enums/role.enum';
+import { PasswordService } from './password.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private passwordService: PasswordService,
+  ) {}
 
   async create(user: CreateUserDto): Promise<UserDocument> {
     const role = user.role ? user.role : Role.Parent;
@@ -40,9 +43,29 @@ export class UserService {
     return this.userModel.findOne({ email });
   }
 
-  async update(userId: string, body: UpdateUserDto): Promise<UserDocument> {
+  async updateRole(userId: string, role: string): Promise<UserDocument> {
     return this.userModel
-      .findByIdAndUpdate(userId, { ...body }, { new: true })
+      .findByIdAndUpdate(userId, { role }, { new: true })
+      .select('-password ');
+  }
+
+  async updatePassword(
+    userId: string,
+    password: string,
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId);
+    const isPasswordEqual = await this.passwordService.verifyPassword(
+      password,
+      user.password,
+    );
+    if (isPasswordEqual) {
+      throw new Error(
+        'Failed to update password. The new password cannot be the same as the current password.',
+      );
+    }
+    const hashedPassword = await this.passwordService.hashPassword(password);
+    return this.userModel
+      .findByIdAndUpdate(userId, { password: hashedPassword })
       .select('-password ');
   }
 }
