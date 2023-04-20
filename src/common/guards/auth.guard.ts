@@ -4,20 +4,19 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { UserService } from 'src/user/user.service';
+import { TokenService } from 'src/token/token.service';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
-    private configService: ConfigService,
-    private userService: UserService,
+    private tokenService: TokenService,
     private reflector: Reflector,
+    private userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,20 +27,18 @@ export class AuthGuard implements CanActivate {
     if (publicRoute) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
+
     if (!token) {
       throw new UnauthorizedException();
     }
+
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-      });
+      const payload = await this.tokenService.verifyAccessToken(token);
+      if (!payload) throw new UnauthorizedException();
       const user = await this.userService.getById(payload.id);
-      if (token !== user.token) {
-        throw new UnauthorizedException();
-      }
-      request.user = user;
+      request.user = { ...payload, role: user.role };
     } catch {
       throw new UnauthorizedException();
     }

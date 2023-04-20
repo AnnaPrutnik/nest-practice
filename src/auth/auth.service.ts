@@ -1,32 +1,21 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PasswordService } from 'src/user/password.service';
+import { TokenService } from 'src/token/token.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { JwtService } from '@nestjs/jwt';
+
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private jwtService: JwtService,
+    private tokenService: TokenService,
     private passwordService: PasswordService,
   ) {}
 
-  private async createToken(id: string) {
-    const token = this.jwtService.sign({ id });
-    await this.userService.setToken(id, token);
-    return token;
-  }
-
-  async signUp(userInfo: CreateUserDto): Promise<{ token: string }> {
+  async signUp(userInfo: CreateUserDto, userAgent: string) {
     const existedUser = await this.userService.getByEmail(userInfo.email);
     if (existedUser) {
-      throw new BadRequestException(
-        `User with email ${userInfo.email} is already exist`,
-      );
+      throw new Error(`User with email ${userInfo.email} is already exist`);
     }
     const hashedPassword = await this.passwordService.hashPassword(
       userInfo.password,
@@ -35,25 +24,27 @@ export class AuthService {
       ...userInfo,
       password: hashedPassword,
     });
-    const token = await this.createToken(newUser._id.toString());
-    return { token };
+    return this.tokenService.create(newUser._id.toString(), userAgent);
   }
 
-  async signIn(email: string, password: string): Promise<{ token: string }> {
+  async signIn(email: string, password: string, userAgent) {
     const user = await this.userService.getByEmail(email);
     const isPasswordValid = await this.passwordService.verifyPassword(
       password,
       user.password,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Bad Credentials');
+      return null;
     }
-    const token = await this.createToken(user._id.toString());
-    return { token };
+    return this.tokenService.create(user._id.toString(), userAgent);
   }
 
-  async logout(userId: string) {
-    await this.userService.removeToken(userId);
+  async refresh(refreshToken: string, userAgent: string) {
+    return this.tokenService.updateRefreshToken(refreshToken, userAgent);
+  }
+
+  async logout(userId: string, userAgent: string) {
+    await this.tokenService.removeRefreshToken(userId, userAgent);
     return;
   }
 }

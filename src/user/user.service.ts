@@ -1,42 +1,33 @@
 import { Model } from 'mongoose';
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from 'src/common/enums/role.enum';
+import { PasswordService } from './password.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private passwordService: PasswordService,
+  ) {}
 
   async create(user: CreateUserDto): Promise<UserDocument> {
-    const username = user.username ? user.username : user.email.split('@')[0];
     const role = user.role ? user.role : Role.Parent;
-
     const newUser = {
       ...user,
-      username,
-
       role,
     };
-    try {
-      const createdUser = new this.userModel(newUser);
-      return createdUser.save();
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    const createdUser = new this.userModel(newUser);
+    return createdUser.save();
   }
 
   async getAll(page, limit) {
     const skip = limit * (page - 1);
     const users = await this.userModel
       .find({})
-      .select('-password -token')
+      .select('-password')
       .limit(limit)
       .skip(skip);
     const total = await this.userModel.find({}).count();
@@ -45,30 +36,36 @@ export class UserService {
   }
 
   async getById(userId: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(userId).select('-password');
-    if (!user) {
-      throw new NotFoundException(`No user by id ${userId}`);
-    }
-    return user;
+    return this.userModel.findById(userId).select('-password');
   }
 
   async getByEmail(email: string): Promise<UserDocument> {
     return this.userModel.findOne({ email });
   }
 
-  async update(userId: string, body: UpdateUserDto): Promise<UserDocument> {
+  async updateRole(userId: string, role: string): Promise<UserDocument> {
     return this.userModel
-      .findByIdAndUpdate(userId, { ...body }, { new: true })
-      .select('-password -token');
+      .findByIdAndUpdate(userId, { role }, { new: true })
+      .select('-password ');
   }
 
-  async setToken(userId: string, token: string) {
-    await this.userModel.findByIdAndUpdate(userId, { token });
-    return;
-  }
-
-  async removeToken(userId: string) {
-    await this.userModel.findByIdAndUpdate(userId, { token: null });
-    return;
+  async updatePassword(
+    userId: string,
+    password: string,
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId);
+    const isPasswordEqual = await this.passwordService.verifyPassword(
+      password,
+      user.password,
+    );
+    if (isPasswordEqual) {
+      throw new Error(
+        'Failed to update password. The new password cannot be the same as the current password.',
+      );
+    }
+    const hashedPassword = await this.passwordService.hashPassword(password);
+    return this.userModel
+      .findByIdAndUpdate(userId, { password: hashedPassword })
+      .select('-password ');
   }
 }
