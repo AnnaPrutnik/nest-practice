@@ -1,30 +1,19 @@
-import {
-  Injectable,
-  BadRequestException,
-  ForbiddenException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Nanny } from './schemas/nanny.schema';
 import { CreateNannyDto } from './dto/create-nanny.dto';
 import { UpdateNannyDto } from './dto/update-nanny.dto';
-import { UserService } from 'src/user/user.service';
-import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class NannyService {
-  constructor(
-    @InjectModel(Nanny.name) private nannyModel: Model<Nanny>,
-    private userService: UserService,
-  ) {}
+  constructor(@InjectModel(Nanny.name) private nannyModel: Model<Nanny>) {}
 
   async create(body: CreateNannyDto, id: string) {
     const existNanny = await this.nannyModel.findById(id);
     if (existNanny) {
       if (existNanny.isActive) {
-        throw new ConflictException('You have already registered as nanny');
+        throw new Error('You have already registered as nanny');
       }
       return this.nannyModel.findByIdAndUpdate(
         id,
@@ -32,16 +21,7 @@ export class NannyService {
         { new: true },
       );
     }
-    const user = await this.userService.getById(id);
-    if (user.role !== Role.Nanny) {
-      throw new ForbiddenException('Role only should be a nanny');
-    }
-    try {
-      const nanny = await this.nannyModel.create({ ...body, _id: id });
-      return nanny;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.nannyModel.create({ ...body, _id: id });
   }
 
   async findAll(limit: number, page: number) {
@@ -58,45 +38,30 @@ export class NannyService {
   }
 
   async findOne(nannyId: string) {
-    const nanny = await this.nannyModel.findById(nannyId);
-    if (!nanny || !nanny.isActive) {
-      throw new NotFoundException(`Nanny with id ${nannyId} is not exist`);
-    }
-    return nanny;
+    return this.nannyModel.findOne({ id: nannyId, isActive: true });
   }
 
   async update(nannyId: string, updateNannyDto: UpdateNannyDto) {
-    const nanny = await this.nannyModel.findById(nannyId).lean();
-    if (!nanny || !nanny.isActive) {
-      throw new NotFoundException('There is no nanny with such id');
+    const nanny = await this.nannyModel
+      .findOne({ id: nannyId, isActive: true })
+      .lean();
+    if (!nanny) {
+      throw new Error('There is no nanny with such id');
     }
     const nannyWithUpdates = {
       ...nanny,
       ...updateNannyDto,
       workdays: { ...nanny.workdays, ...updateNannyDto.workdays },
     };
-    console.log('nannyWithUpdates', nannyWithUpdates);
-    try {
-      const updatedNanny = await this.nannyModel.findByIdAndUpdate(
-        nannyId,
-        nannyWithUpdates,
-        {
-          new: true,
-        },
-      );
-      return updatedNanny;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+
+    return this.nannyModel.findByIdAndUpdate(nannyId, nannyWithUpdates, {
+      new: true,
+    });
   }
 
   async delete(nannyId: string) {
-    const nanny = await this.nannyModel.findByIdAndUpdate(nannyId, {
+    return this.nannyModel.findByIdAndUpdate(nannyId, {
       isActive: false,
     });
-    if (!nanny) {
-      throw new NotFoundException(`Nanny with id ${nannyId} is not exist`);
-    }
-    return true;
   }
 }
