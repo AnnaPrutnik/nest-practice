@@ -1,9 +1,5 @@
 import { Model } from 'mongoose';
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,13 +16,8 @@ export class UserService {
       ...user,
       role,
     };
-    try {
-      const createdUser = new this.userModel(newUser);
-      return createdUser.save();
-    } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Validation error');
-    }
+    const createdUser = new this.userModel(newUser);
+    return createdUser.save();
   }
 
   async getAll(page, limit) {
@@ -42,11 +33,7 @@ export class UserService {
   }
 
   async getById(userId: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(userId).select('-password');
-    if (!user) {
-      throw new NotFoundException(`No user by id ${userId}`);
-    }
-    return user;
+    return this.userModel.findById(userId).select('-password');
   }
 
   async getByEmail(email: string): Promise<UserDocument> {
@@ -54,13 +41,8 @@ export class UserService {
   }
 
   async update(userId: string, body: UpdateUserDto): Promise<UserDocument> {
-    try {
-      const updatedUser = await this.userModel
-        .findByIdAndUpdate(userId, { ...body }, { new: true })
-        .select('-password ');
-      return updatedUser;
-    } catch (error) {
-      throw new BadRequestException('Bad Request');
-    }
+    return this.userModel
+      .findByIdAndUpdate(userId, { ...body }, { new: true })
+      .select('-password ');
   }
 }

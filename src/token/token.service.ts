@@ -65,9 +65,7 @@ export class TokenService {
   }
 
   async updateRefreshToken(refreshToken: string, userAgent: string) {
-    console.log(refreshToken);
     const tokenDoc = await this.tokenModel.findOne({ refreshToken }).lean();
-    console.log('tokenDoc before', tokenDoc);
     if (!tokenDoc) {
       return null;
     }
@@ -78,7 +76,6 @@ export class TokenService {
     const tokens = await this.generateTokens(tokenDoc.userId.toString());
 
     const expires = this.expireTokenDate();
-    console.log('tokenDoc after', tokenDoc);
     await this.tokenModel.findByIdAndUpdate(tokenDoc._id, {
       expires,
       refreshToken: tokens.refreshToken,

@@ -5,6 +5,7 @@ import {
   Get,
   Response,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -37,11 +38,16 @@ export class AuthController {
   })
   @ApiCreatedResponse({ description: '"The user has successfully signed up' })
   @ApiBadRequestResponse({
-    description: 'Bad request',
+    description: 'Bad request. Email is already used or validation errors',
   })
   @Public()
   async singUp(@Body() body: CreateUserDto, @UserAgent() userAgent: string) {
-    return this.authService.signUp(body, userAgent);
+    try {
+      const tokens = await this.authService.signUp(body, userAgent);
+      return tokens;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('login')
@@ -61,11 +67,15 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    const { accessToken, refreshToken } = await this.authService.signIn(
+    const tokens = await this.authService.signIn(
       body.email,
       body.password,
       userAgent,
     );
+    if (!tokens) {
+      throw new UnauthorizedException('Bad Credentials');
+    }
+    const { accessToken, refreshToken } = tokens;
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -75,6 +85,13 @@ export class AuthController {
   }
 
   @Get('refresh')
+  @ApiOperation({
+    summary: 'Update refresh token',
+  })
+  @ApiOkResponse({ description: 'The tokens have successfully updated' })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh token does not exist or is invalid',
+  })
   @Public()
   async refresh(
     @UserAgent() userAgent: string,
@@ -83,7 +100,9 @@ export class AuthController {
   ) {
     const tokens = await this.authService.refresh(refreshToken, userAgent);
     if (!tokens) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'Refresh token does not exist or is invalid',
+      );
     }
 
     res.cookie('refresh_token', tokens.refreshToken, {

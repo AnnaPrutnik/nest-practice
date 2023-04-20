@@ -4,10 +4,10 @@ import {
   Param,
   Body,
   Put,
-  Request,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -58,6 +58,7 @@ export class UserController {
 
   @Get('profile')
   //Role access: anybody
+  //Нужен ли этот эндпоинт, здесь храниться служебная инфа?
   @ApiOperation({
     summary: "Get user's profile",
   })
@@ -72,8 +73,6 @@ export class UserController {
 
   @Put(':userId')
   //Role access: maybe this route would be accessible only for admin
-  //and then is going to add the route with PUT method to 'profile' for updating user profile
-  //by using id from req.user ??
   @ApiOperation({ summary: 'Update user by id' })
   @ApiParam({ name: 'userId', description: 'user id', type: String })
   @ApiOkResponse({
@@ -93,7 +92,11 @@ export class UserController {
     @Body() body: UpdateUserDto,
     @Param('userId', IsValidId) userId: string,
   ) {
-    const user = await this.userService.update(userId, body);
-    return user;
+    try {
+      const user = await this.userService.update(userId, body);
+      return user;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

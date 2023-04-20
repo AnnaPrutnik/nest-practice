@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PasswordService } from 'src/user/password.service';
 import { TokenService } from 'src/token/token.service';
@@ -19,9 +15,7 @@ export class AuthService {
   async signUp(userInfo: CreateUserDto, userAgent: string) {
     const existedUser = await this.userService.getByEmail(userInfo.email);
     if (existedUser) {
-      throw new BadRequestException(
-        `User with email ${userInfo.email} is already exist`,
-      );
+      throw new Error(`User with email ${userInfo.email} is already exist`);
     }
     const hashedPassword = await this.passwordService.hashPassword(
       userInfo.password,
@@ -40,7 +34,7 @@ export class AuthService {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Bad Credentials');
+      return null;
     }
     return this.tokenService.create(user._id.toString(), userAgent);
   }
