@@ -27,12 +27,16 @@ export class AuthService {
     return this.tokenService.create(newUser._id.toString(), userAgent);
   }
 
-  async signIn(email: string, password: string, userAgent) {
+  async signIn(email: string, password: string, userAgent: string) {
     const user = await this.userService.getByEmail(email);
+    if (!user) {
+      return null;
+    }
     const isPasswordValid = await this.passwordService.verifyPassword(
       password,
       user.password,
     );
+    console.log('isPasswordValid', isPasswordValid);
     if (!isPasswordValid) {
       return null;
     }

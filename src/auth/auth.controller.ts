@@ -41,10 +41,20 @@ export class AuthController {
     description: 'Bad request. Email is already used or validation errors',
   })
   @Public()
-  async singUp(@Body() body: CreateUserDto, @UserAgent() userAgent: string) {
+  async singUp(
+    @Body() body: CreateUserDto,
+    @UserAgent() userAgent: string,
+    @Response({ passthrough: true }) res: ExpressResponse,
+  ) {
     try {
       const tokens = await this.authService.signUp(body, userAgent);
-      return tokens;
+      const { accessToken, refreshToken } = tokens;
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+      res.status(201).json({ accessToken });
+      return;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -56,9 +66,6 @@ export class AuthController {
   })
   @ApiCreatedResponse({ description: 'The user has successfully logged in' })
   @ApiBadRequestResponse({
-    description: 'Bad request',
-  })
-  @ApiUnauthorizedResponse({
     description: 'Bad Credentials',
   })
   @Public()
@@ -67,13 +74,14 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
+    console.log(body);
     const tokens = await this.authService.signIn(
       body.email,
       body.password,
       userAgent,
     );
     if (!tokens) {
-      throw new UnauthorizedException('Bad Credentials');
+      throw new BadRequestException('Bad Credentials');
     }
     const { accessToken, refreshToken } = tokens;
     res.cookie('refresh_token', refreshToken, {
