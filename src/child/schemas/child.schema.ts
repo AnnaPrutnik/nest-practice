@@ -3,6 +3,8 @@ import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Parent } from 'src/parent/schemas/parent.schema';
+import { Gender } from './gender.enum';
+import * as moment from 'moment';
 
 export type ChildDocument = HydratedDocument<Child>;
 
@@ -12,7 +14,7 @@ export type ChildDocument = HydratedDocument<Child>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
+      delete ret.isDeleted;
       return ret;
     },
   },
@@ -20,7 +22,7 @@ export type ChildDocument = HydratedDocument<Child>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
+      delete ret.isDeleted;
       return ret;
     },
   },
@@ -51,18 +53,25 @@ export class Child {
   })
   @IsNotEmpty()
   @IsString()
-  @Prop({ required: true, enum: ['male', 'female'] })
-  gender: string;
+  @Prop({ required: true, enum: Gender })
+  gender: Gender;
 
   @ApiProperty({
-    name: 'gender',
-    example: 'male',
-    description: 'gender can be "male" or "female"',
+    name: 'parent',
+    example: 'mongoId',
+    description: 'ref to parent profile',
   })
   @IsNotEmpty()
   @IsString()
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Parent' })
+  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Parent' })
   parent: Parent;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const ChildSchema = SchemaFactory.createForClass(Child);
+
+ChildSchema.virtual('age').get(function () {
+  return moment().diff(this.birthday, 'years');
+});

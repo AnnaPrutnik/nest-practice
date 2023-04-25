@@ -25,7 +25,9 @@ export class ParentService {
   }
 
   async findOne(parentId: string) {
-    return this.parentModel.findOne({ _id: parentId, isDeleted: false });
+    return this.parentModel
+      .findOne({ _id: parentId, isDeleted: false })
+      .populate('children');
   }
 
   async update(parentId: string, updateParentDto: UpdateParentDto) {

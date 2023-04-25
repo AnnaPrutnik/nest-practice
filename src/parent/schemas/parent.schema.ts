@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
+import { Child } from 'src/child/schemas/child.schema';
 
 export type ParentDocument = HydratedDocument<Parent>;
 
@@ -66,3 +67,9 @@ export class Parent {
 }
 
 export const ParentSchema = SchemaFactory.createForClass(Parent);
+
+ParentSchema.virtual('children', {
+  ref: Child.name,
+  localField: '_id',
+  foreignField: 'parent',
+});
