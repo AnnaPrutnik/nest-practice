@@ -93,7 +93,7 @@ export class Nanny {
   workdays: Workdays;
 
   @Prop({ type: Boolean, default: true })
-  isActive: boolean;
+  isDeleted: boolean;
 }
 
 export const NannySchema = SchemaFactory.createForClass(Nanny);

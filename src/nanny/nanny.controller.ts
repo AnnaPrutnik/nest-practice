@@ -22,7 +22,6 @@ import {
   ApiBadRequestResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
-  ApiConflictResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
@@ -32,7 +31,8 @@ import { UpdateNannyDto } from './dto/update-nanny.dto';
 import { IsValidId } from 'src/common/pipes/isValidId.pipe';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
-import { Request as ExpressRequest } from 'express';
+import { User } from 'src/common/decorators/user.decorator';
+import { RequestUser } from 'src/common/interfaces/requestUser.interface';
 
 @ApiTags('nanny')
 @ApiHeader({
@@ -63,19 +63,18 @@ export class NannyController {
     description:
       'Bad request: nanny has been already exist or validation error',
   })
-  async create(@Body() body: CreateNannyDto, @Request() req: ExpressRequest) {
-    if (req.user.id) {
-      try {
-        const nanny = await this.nannyService.create(body, req.user.id);
-        return nanny;
-      } catch (error) {
-        throw new BadRequestException(error.message);
-      }
+  async create(@Body() body: CreateNannyDto, @User() user: RequestUser) {
+    try {
+      const nanny = await this.nannyService.create(body, user.id);
+      return nanny;
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
   }
 
   @Get('all')
   //Role access: anyone
+  @ApiOperation({ summary: 'Get all nannies' })
   @ApiOkResponse({
     description: 'Successful response with the list of nannies',
   })
@@ -92,6 +91,7 @@ export class NannyController {
 
   @Get(':nannyId')
   //Role access: anyone
+  @ApiOperation({ summary: 'Create nanny by id' })
   @ApiOkResponse({
     description: 'Successful response with nanny data',
   })
@@ -114,6 +114,7 @@ export class NannyController {
   @Put(':nannyId')
   //Role access: nanny and admin
   @Roles(Role.Admin, Role.Nanny)
+  @ApiOperation({ summary: 'Update nanny' })
   @ApiOkResponse({
     description: 'Successful response with updated nanny data',
   })
@@ -143,6 +144,7 @@ export class NannyController {
 
   @Delete(':nannyId')
   //Role access: admin, nanny
+  @ApiOperation({ summary: 'Delete nanny' })
   @Roles(Role.Admin, Role.Nanny)
   @ApiOkResponse({
     description: 'Successful response',
