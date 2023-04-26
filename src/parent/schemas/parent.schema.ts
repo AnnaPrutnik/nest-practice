@@ -13,7 +13,6 @@ export type ParentDocument = HydratedDocument<Parent>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
       return ret;
     },
   },
@@ -21,7 +20,6 @@ export type ParentDocument = HydratedDocument<Parent>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
       return ret;
     },
   },
@@ -62,7 +60,7 @@ export class Parent {
   @Prop()
   birthday: Date;
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ default: false, select: false })
   isDeleted: boolean;
 }
 

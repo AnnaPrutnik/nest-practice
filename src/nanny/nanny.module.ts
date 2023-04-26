@@ -17,5 +17,6 @@ import { UserModule } from 'src/user/user.module';
   ],
   controllers: [NannyController],
   providers: [NannyService],
+  exports: [NannyService],
 })
 export class NannyModule {}

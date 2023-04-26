@@ -3,7 +3,7 @@ import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Parent } from 'src/parent/schemas/parent.schema';
-import { Gender } from './gender.enum';
+import { Gender } from 'src/common/enums/gender.enum';
 import * as moment from 'moment';
 
 export type ChildDocument = HydratedDocument<Child>;
@@ -14,7 +14,6 @@ export type ChildDocument = HydratedDocument<Child>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isDeleted;
       return ret;
     },
   },
@@ -22,7 +21,6 @@ export type ChildDocument = HydratedDocument<Child>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isDeleted;
       return ret;
     },
   },
@@ -66,7 +64,7 @@ export class Child {
   @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Parent' })
   parent: Parent;
 
-  @Prop({ default: false })
+  @Prop({ default: false, select: false })
   isDeleted: boolean;
 }
 

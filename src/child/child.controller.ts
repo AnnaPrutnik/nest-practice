@@ -208,6 +208,6 @@ export class ChildController {
     if (!child) {
       throw new BadRequestException('No child with such id');
     }
-    return child;
+    return 'success';
   }
 }

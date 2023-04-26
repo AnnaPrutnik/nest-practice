@@ -14,7 +14,6 @@ export type NannyDocument = HydratedDocument<Nanny>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
       return ret;
     },
   },
@@ -22,7 +21,6 @@ export type NannyDocument = HydratedDocument<Nanny>;
     virtuals: true,
     transform: function (doc, ret) {
       delete ret._id;
-      delete ret.isActive;
       return ret;
     },
   },
@@ -92,7 +90,7 @@ export class Nanny {
   @Prop({ type: WorkdaysSchema, required: true })
   workdays: Workdays;
 
-  @Prop({ type: Boolean, default: true })
+  @Prop({ default: false, select: false })
   isDeleted: boolean;
 }
 

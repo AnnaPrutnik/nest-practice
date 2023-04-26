@@ -11,6 +11,7 @@ import { NannyModule } from './nanny/nanny.module';
 import { TokenModule } from './token/token.module';
 import { ParentModule } from './parent/parent.module';
 import { ChildModule } from './child/child.module';
+import { HireModule } from './hire/hire.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ChildModule } from './child/child.module';
     TokenModule,
     ParentModule,
     ChildModule,
+    HireModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },

@@ -38,12 +38,12 @@ export class NannyService {
   }
 
   async findOne(nannyId: string) {
-    return this.nannyModel.findOne({ id: nannyId, isDeleted: false });
+    return this.nannyModel.findOne({ _id: nannyId, isDeleted: false });
   }
 
   async update(nannyId: string, updateNannyDto: UpdateNannyDto) {
     const nanny = await this.nannyModel
-      .findOne({ id: nannyId, isActive: true })
+      .findOne({ _id: nannyId, isActive: true })
       .lean();
     if (!nanny) {
       throw new Error('There is no nanny with such id');

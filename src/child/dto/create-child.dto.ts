@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Gender } from '../schemas/gender.enum';
+import { Gender } from 'src/common/enums/gender.enum';
 
 export class CreateChildDto {
   @ApiProperty({
