@@ -32,7 +32,7 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @ApiProperty({ example: 'Parent', description: '' })
+  @ApiProperty({ example: 'Parent', description: 'parent' })
   @Prop({
     type: String,
     default: Role.Parent,

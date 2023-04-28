@@ -12,12 +12,12 @@ export class NannyService {
   async create(body: CreateNannyDto, id: string) {
     const existNanny = await this.nannyModel.findById(id);
     if (existNanny) {
-      if (existNanny.isActive) {
+      if (!existNanny.isDeleted) {
         throw new Error('You have already registered as nanny');
       }
       return this.nannyModel.findByIdAndUpdate(
         id,
-        { ...body, isActive: true },
+        { ...body, isDeleted: false },
         { new: true },
       );
     }
@@ -27,23 +27,23 @@ export class NannyService {
   async findAll(limit: number, page: number) {
     const skip = limit * (page - 1);
     const nannies = await this.nannyModel
-      .find({ isActive: true })
+      .find({ isDeleted: false })
       .limit(limit)
       .skip(skip)
       .lean();
 
-    const total = await this.nannyModel.find({ isActive: true }).count();
+    const total = await this.nannyModel.find({ isDeleted: false }).count();
     const pages = Math.ceil(total / limit);
     return { nannies, total, page, pages };
   }
 
   async findOne(nannyId: string) {
-    return this.nannyModel.findOne({ id: nannyId, isActive: true });
+    return this.nannyModel.findOne({ _id: nannyId, isDeleted: false });
   }
 
   async update(nannyId: string, updateNannyDto: UpdateNannyDto) {
     const nanny = await this.nannyModel
-      .findOne({ id: nannyId, isActive: true })
+      .findOne({ _id: nannyId, isActive: true })
       .lean();
     if (!nanny) {
       throw new Error('There is no nanny with such id');
@@ -61,7 +61,7 @@ export class NannyService {
 
   async delete(nannyId: string) {
     return this.nannyModel.findByIdAndUpdate(nannyId, {
-      isActive: false,
+      isDeleted: false,
     });
   }
 }

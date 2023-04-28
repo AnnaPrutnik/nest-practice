@@ -30,7 +30,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document, option);
 
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
 
   await app.listen(port, () =>
     console.log(`Server is starting on PORT ${port}`),
