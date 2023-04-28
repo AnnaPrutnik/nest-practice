@@ -21,7 +21,7 @@ export class HireService {
   private verifyDate(date: Date) {
     const isFutureDate = moment().isBefore(date);
     if (!isFutureDate) {
-      throw new Error('The date should be in future');
+      throw new Error('The date must be in the future');
     }
     return isFutureDate;
   }
@@ -47,6 +47,14 @@ export class HireService {
       throw new Error(`The nanny is not working on ${weekday}`);
     }
     return nanny;
+  }
+
+  private getMonthPeriod(month) {
+    const isNumber = moment(month, 'M MM').isValid();
+    const monthSign = isNumber ? 'M MM' : 'MMM MMMM';
+    const start = moment(month, monthSign).startOf('month');
+    const end = moment(month, monthSign).endOf('month');
+    return { start, end };
   }
 
   private async verifyChildren(
@@ -79,6 +87,8 @@ export class HireService {
   }
 
   async create(body: CreateHireDto, parentId: string) {
+    //verify date
+    this.verifyDate(body.date);
     //check nanny
     const nanny = await this.checkNannyAvailability(body.nanny, body.date);
     //verify children
@@ -96,6 +106,7 @@ export class HireService {
   }
 
   async update(hireId: string, updateHireDto: UpdateHireDto) {
+    //check does hire complete or cancel or not exist
     const hire = await this.hireModel.findById(hireId);
     if (
       !hire ||
@@ -104,25 +115,73 @@ export class HireService {
     ) {
       throw new Error('Hire is not available');
     }
+    //check date
+    let nanny: NannyDocument;
     if (updateHireDto.hasOwnProperty('date')) {
-      const isFutureDate = this.verifyDate(updateHireDto.date);
-      console.log('has own property date');
-      const nanny = await this.checkNannyAvailability(
+      this.verifyDate(updateHireDto.date);
+      nanny = await this.checkNannyAvailability(
         hire.nanny.toString(),
         updateHireDto.date,
       );
+    } else {
+      nanny = await this.nannyService.findOne(hire.nanny.toString());
     }
-    return `This action updates ahire`;
+    //check children
+    if (updateHireDto.hasOwnProperty('children')) {
+      await this.verifyChildren(
+        nanny,
+        updateHireDto.children,
+        hire.parent.toString(),
+      );
+    }
+
+    return this.hireModel.findByIdAndUpdate(hireId, updateHireDto, {
+      new: true,
+    });
   }
 
-  canceled(hireId: string) {
-    return this.hireModel.findByIdAndUpdate(hireId, {
-      status: Status.Canceled,
-    });
+  cancel(hireId: string) {
+    return this.hireModel.findByIdAndUpdate(
+      hireId,
+      {
+        status: Status.Canceled,
+      },
+      { new: true },
+    );
   }
-  closeHire(hireId: string) {
-    return this.hireModel.findByIdAndUpdate(hireId, {
-      status: Status.Completed,
-    });
+
+  close(hireId: string) {
+    return this.hireModel.findByIdAndUpdate(
+      hireId,
+      {
+        status: Status.Completed,
+      },
+      { new: true },
+    );
+  }
+
+  async nannyMonthHire(
+    nannyId: string,
+    month: string,
+    limit: number,
+    page: number,
+  ) {
+    const { start, end } = this.getMonthPeriod(month);
+    const skip = (page - 1) * limit;
+    const data = await this.hireModel
+      .find({
+        nanny: nannyId,
+        date: { $gte: start, $lte: end },
+      })
+      .limit(limit)
+      .skip(skip);
+    const total = await this.hireModel
+      .find({
+        nanny: nannyId,
+        date: { $gte: start, $lte: end },
+      })
+      .count();
+    const pages = Math.floor(total / limit);
+    return { data, limit, page, pages, total };
   }
 }

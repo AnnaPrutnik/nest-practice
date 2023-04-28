@@ -5,6 +5,9 @@ import {
   Body,
   Put,
   Param,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -26,6 +29,8 @@ import { User } from 'src/common/decorators/user.decorator';
 import { RequestUser } from 'src/common/interfaces/requestUser.interface';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { IsValidId } from 'src/common/pipes/isValidId.pipe';
+import { IsValidMonth } from 'src/common/pipes/isValidMonth.pipe';
 
 @ApiTags('hire')
 @ApiHeader({
@@ -45,7 +50,7 @@ export class HireController {
   @Post()
   //Role access: Parent
   @Roles(Role.Parent)
-  @ApiOperation({ summary: 'Request for new hired' })
+  @ApiOperation({ summary: 'Request for new hiring' })
   @ApiCreatedResponse({
     description: 'Reservation has been successfully created',
   })
@@ -67,7 +72,28 @@ export class HireController {
 
   @Get(':hireId')
   //Role access: anyone
-  @ApiOperation({ summary: 'Hire details' })
+  @ApiOperation({ summary: 'Hiring details' })
+  @ApiOkResponse({
+    description: 'Successful response: details about hiring',
+  })
+  @ApiNotFoundResponse({
+    description: 'No hiring with such id',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request: validation error',
+  })
+  async findOne(@Param('hireId', IsValidId) hireId: string) {
+    const hire = await this.hireService.getOne(hireId);
+    if (!hire) {
+      throw new BadRequestException('No hiring with such id');
+    }
+    return hire;
+  }
+
+  @Put(':hireId')
+  //Role access: parent
+  @Roles(Role.Parent)
+  @ApiOperation({ summary: 'Update hiring details' })
   @ApiOkResponse({
     description: 'Successful response: details about hiring',
   })
@@ -78,13 +104,8 @@ export class HireController {
   @ApiBadRequestResponse({
     description: 'Bad request: validation error',
   })
-  findOne(@Param('hireId') hireId: string) {
-    return this.hireService.getOne(hireId);
-  }
-
-  @Put(':hireId')
-  async changeDate(
-    @Param('hireId') hireId: string,
+  async changeDetails(
+    @Param('hireId', IsValidId) hireId: string,
     @Body() updateHireDto: UpdateHireDto,
   ) {
     try {
@@ -96,12 +117,58 @@ export class HireController {
   }
 
   @Get('cancel/:hireId')
-  canceled(@Param('hireId') hireId: string) {
-    return;
+  //Role access: anyone
+  @ApiOperation({ summary: 'Cancel hiring ' })
+  @ApiOkResponse({
+    description: 'Successful response:hire has been canceled',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request: validation error',
+  })
+  canceled(@Param('hireId', IsValidId) hireId: string) {
+    return this.hireService.cancel(hireId);
   }
 
   @Get('close/:hireId')
-  closed(@Param('hireId') hireId: string) {
-    return;
+  //Role access: anyone
+  @ApiOperation({ summary: 'Complete hiring' })
+  @ApiOkResponse({
+    description: 'Successful response:hire has been closed',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request: validation error',
+  })
+  closed(@Param('hireId', IsValidId) hireId: string) {
+    return this.hireService.close(hireId);
+  }
+
+  @Get('nanny/:nannyId')
+  //Role access: nanny, admin
+  @Roles(Role.Nanny, Role.Admin)
+  @ApiOperation({ summary: 'Get all hiring for month' })
+  @ApiOkResponse({
+    description: 'Successful response:hire has been closed',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request: validation error',
+  })
+  async nannyMonthHiring(
+    @Param('nannyId', IsValidId) nannyId: string,
+    @Query('month', IsValidMonth) month: string,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('page', new DefaultValuePipe(10), ParseIntPipe) page: number,
+  ) {
+    try {
+      const monthHire = await this.hireService.nannyMonthHire(
+        nannyId,
+        month,
+        limit,
+        page,
+      );
+      return monthHire;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }
+

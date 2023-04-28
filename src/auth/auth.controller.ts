@@ -16,6 +16,8 @@ import {
   ApiOkResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiCookieAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';
@@ -26,6 +28,7 @@ import { User } from 'src/common/decorators/user.decorator';
 import { RequestUser } from 'src/common/interfaces/requestUser.interface';
 import { UserAgent } from 'src/common/decorators/userAgent.decorator';
 import { Cookie } from 'src/common/decorators/cookies.decorator';
+import { User as UserSchema } from 'src/user/schemas/user.schema';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -36,7 +39,9 @@ export class AuthController {
   @ApiOperation({
     summary: 'Register a new user account and obtain access token',
   })
-  @ApiCreatedResponse({ description: '"The user has successfully signed up' })
+  @ApiCreatedResponse({
+    description: '"The user has successfully signed up',
+  })
   @ApiBadRequestResponse({
     description: 'Bad request. Email is already used or validation errors',
   })
@@ -96,6 +101,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Update refresh token',
   })
+  @ApiCookieAuth()
   @ApiOkResponse({ description: 'The tokens have successfully updated' })
   @ApiUnauthorizedResponse({
     description: 'Refresh token does not exist or is invalid',

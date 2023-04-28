@@ -9,7 +9,6 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
-  Request,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
