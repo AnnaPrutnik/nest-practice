@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from 'src/common/enums/role.enum';
+import { Role } from '../common/enums/role.enum';
 import { PasswordService } from './password.service';
 
 @Injectable()
@@ -12,7 +12,6 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     private passwordService: PasswordService,
   ) {}
-
   async create(user: CreateUserDto): Promise<UserDocument> {
     const role = user.role ? user.role : Role.Parent;
     const newUser = {
@@ -34,21 +33,17 @@ export class UserService {
     const pages = Math.ceil(total / limit);
     return { users, total, page, pages };
   }
-
   async getById(userId: string): Promise<UserDocument> {
     return this.userModel.findById(userId).select('-password');
   }
-
   async getByEmail(email: string): Promise<UserDocument> {
     return this.userModel.findOne({ email });
   }
-
   async updateRole(userId: string, role: string): Promise<UserDocument> {
     return this.userModel
       .findByIdAndUpdate(userId, { role }, { new: true })
       .select('-password ');
   }
-
   async updatePassword(
     userId: string,
     password: string,
