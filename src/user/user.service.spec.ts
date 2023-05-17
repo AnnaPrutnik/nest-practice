@@ -5,7 +5,7 @@ import {
   connectDB,
   dropDB,
   dropCollections,
-} from '../test-utils/mongo/MongooseTestModule';
+} from 'src/test-utils/mongo/MongooseTestModule';
 import { UserController } from './user.controller';
 import { PasswordService } from './password.service';
 import { userStub, createUserDtoStub } from './stubs/user.stub';

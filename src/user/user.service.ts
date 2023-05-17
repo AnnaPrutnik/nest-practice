@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from '../common/enums/role.enum';
 import { PasswordService } from './password.service';
+import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class UserService {

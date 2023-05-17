@@ -4,6 +4,8 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PasswordService } from './password.service';
 import { usersStub } from './stubs/user.stub';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Role } from 'src/common/enums/role.enum';
 
 import { User, UserSchema, UserDocument } from './schemas/user.schema';
 import { Request } from 'express';
@@ -13,6 +15,7 @@ jest.mock('./password.service');
 
 describe('UsersController', () => {
   let controller: UserController;
+  const mockRolesGuard = {};
 
   const requestMock = {
     query: {},
@@ -26,6 +29,10 @@ describe('UsersController', () => {
         UserService,
         PasswordService,
         { provide: getModelToken(User.name), useValue: UserSchema },
+        {
+          provide: RolesGuard,
+          useValue: jest.fn().mockImplementation(() => true),
+        },
       ],
     }).compile();
 

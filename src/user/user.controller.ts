@@ -43,7 +43,7 @@ export class UserController {
   constructor(private userService: UserService) {}
   @Get('all')
   //Role access: only for admin
-  // @Roles(Role.Admin)
+  @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'page', required: false })
