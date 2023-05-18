@@ -22,7 +22,7 @@ export class UserService {
     return createdUser.save();
   }
 
-  async getAll(page, limit) {
+  async getAll(limit, page) {
     const skip = limit * (page - 1);
     const users = await this.userModel
       .find({})
@@ -33,22 +33,29 @@ export class UserService {
     const pages = Math.ceil(total / limit);
     return { users, total, page, pages };
   }
+
   async getById(userId: string): Promise<UserDocument> {
     return this.userModel.findById(userId).select('-password');
   }
+
   async getByEmail(email: string): Promise<UserDocument> {
     return this.userModel.findOne({ email });
   }
+
   async updateRole(userId: string, role: string): Promise<UserDocument> {
     return this.userModel
       .findByIdAndUpdate(userId, { role }, { new: true })
       .select('-password ');
   }
+
   async updatePassword(
     userId: string,
     password: string,
   ): Promise<UserDocument> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new Error('Failed to update password. Such user does not exist');
+    }
     const isPasswordEqual = await this.passwordService.verifyPassword(
       password,
       user.password,

@@ -1,26 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
+import { NotFoundException } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PasswordService } from './password.service';
-import { usersStub } from './stubs/user.stub';
-import { RolesGuard } from 'src/common/guards/role.guard';
-import { Role } from 'src/common/enums/role.enum';
-
+import { userStub, usersStub } from './stubs/user.stub';
 import { User, UserSchema, UserDocument } from './schemas/user.schema';
-import { Request } from 'express';
+import { Role } from 'src/common/enums/role.enum';
+import { getModelToken } from '@nestjs/mongoose';
 
 jest.mock('./user.service');
 jest.mock('./password.service');
 
 describe('UsersController', () => {
   let controller: UserController;
-  const mockRolesGuard = {};
+  let userService: UserService;
 
-  const requestMock = {
-    query: {},
-    body: {},
-  } as unknown as Request;
+  const userId = userStub().id;
+  const userProfile = userStub();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,14 +25,11 @@ describe('UsersController', () => {
         UserService,
         PasswordService,
         { provide: getModelToken(User.name), useValue: UserSchema },
-        {
-          provide: RolesGuard,
-          useValue: jest.fn().mockImplementation(() => true),
-        },
       ],
     }).compile();
 
     controller = module.get<UserController>(UserController);
+    userService = module.get<UserService>(UserService);
     jest.clearAllMocks();
   });
 
@@ -44,7 +37,7 @@ describe('UsersController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('getAllUsers method', () => {
+  describe('getAll', () => {
     let getAllUsers: {
       page: number;
       pages: number;
@@ -52,29 +45,64 @@ describe('UsersController', () => {
       users: UserDocument[];
     };
 
-    let limit: number;
-    let page: number;
-
     beforeEach(async () => {
-      requestMock.query.limit = '5';
-      requestMock.query.page = '1';
-      limit = Number(requestMock.query.limit);
-      page = Number(requestMock.query.page);
-      getAllUsers = await controller.getAllUsers(limit, page);
+      getAllUsers = await controller.getAllUsers(10, 1);
     });
 
-    it('should limit and page be defined', () => {
-      expect(limit).not.toBeUndefined();
-      expect(page).not.toBeUndefined();
+    it('should be called userService.getAllUsers with limit and page', async () => {
+      expect(userService.getAll).toHaveBeenCalledTimes(1);
+      expect(userService.getAll).toHaveBeenCalledWith(10, 1);
     });
 
-    it('should return success without query params', async () => {
+    it('should return list of users', async () => {
       const result = usersStub();
       expect(getAllUsers).toEqual(result);
     });
+  });
 
-    it('should return success with query params', async () => {});
+  describe('getProfile', () => {
+    it('should be called userService.getById', async () => {
+      await controller.getUser(userId);
 
-    it('should return ', async () => {});
+      expect(userService.getById).toBeCalledTimes(1);
+      expect(userService.getById).toBeCalledWith(userId);
+    });
+
+    it('should return a user profile', async () => {
+      const result = await controller.getUser(userId);
+
+      expect(result).toEqual(userProfile);
+    });
+
+    it('should be throw an NotFoundException without user profile', async () => {
+      try {
+        await controller.getUser('not id');
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+  });
+
+  describe('changeRole', () => {
+    const body = { role: Role.Parent };
+    it('should be called userService.updateRole', async () => {
+      await controller.changeRole(body, userId);
+
+      expect(userService.updateRole).toBeCalledTimes(1);
+      expect(userService.updateRole).toBeCalledWith(userId, body.role);
+    });
+
+    it('should return updated role', async () => {
+      const updatedUser = await controller.changeRole(body, userId);
+      expect(updatedUser.role).toBe(body.role);
+    });
+
+    it('should return NotFoundException without user data', async () => {
+      try {
+        await controller.changeRole(body, 'other-id');
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
   });
 });
