@@ -32,7 +32,6 @@ export const UserService = jest.fn().mockReturnValue({
         throw new Error('The Same Password Error');
       }
 
-      user.password = newPassword;
-      return user;
+      return 'success';
     }),
 });

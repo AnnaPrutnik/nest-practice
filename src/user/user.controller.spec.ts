@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PasswordService } from './password.service';
@@ -102,6 +102,39 @@ describe('UsersController', () => {
         await controller.changeRole(body, 'other-id');
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+  });
+
+  describe('updatePassword', () => {
+    const body = { password: '12345' };
+    const reqUser = {
+      id: userId,
+      role: userProfile.role,
+    };
+
+    it('should called UserService.updatePassword', async () => {
+      await controller.changePassword(body, reqUser);
+
+      expect(userService.updatePassword).toBeCalledTimes(1);
+      expect(userService.updatePassword).toBeCalledWith(
+        reqUser.id,
+        body.password,
+      );
+    });
+
+    it('should return string after success changing', async () => {
+      const result = await controller.changePassword(body, reqUser);
+
+      expect(typeof result).toBe('string');
+    });
+
+    it('should thrown a BadRequestException if password is the same', async () => {
+      const body = { password: userProfile.password };
+      try {
+        await controller.changePassword(body, reqUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
       }
     });
   });
