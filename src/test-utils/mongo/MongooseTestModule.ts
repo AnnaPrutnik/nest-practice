@@ -21,7 +21,7 @@ export const dropDB = async () => {
 
 export const dropCollections = async () => {
   if (mongod) {
-    const collections = mongoose.connection.db.collections;
+    const collections = await mongoose.connection.db.collections();
     for (const key in collections) {
       const collection = collections[key];
       await collection.deleteMany({});

@@ -1,5 +1,9 @@
 import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,7 +26,7 @@ export class UserService {
     return createdUser.save();
   }
 
-  async getAll(limit, page) {
+  async getAll(limit: number, page: number) {
     const skip = limit * (page - 1);
     const users = await this.userModel
       .find({})
@@ -35,39 +39,58 @@ export class UserService {
   }
 
   async getById(userId: string): Promise<UserDocument> {
-    return this.userModel.findById(userId).select('-password');
+    const user = await this.userModel.findById(userId).select('-password');
+    if (!user) {
+      throw new NotFoundException(`The user with id ${userId} does not exist`);
+    }
+    return user;
   }
 
   async getByEmail(email: string): Promise<UserDocument> {
-    return this.userModel.findOne({ email });
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException(
+        `The user with email ${email} does not exist`,
+      );
+    }
+    return user;
   }
 
   async updateRole(userId: string, role: string): Promise<UserDocument> {
-    return this.userModel
+    const enumValues = Object.values(Role) as string[];
+    if (!enumValues.includes(role)) {
+      throw new BadRequestException('Enter the valid role value');
+    }
+
+    const updatedUser = await this.userModel
       .findByIdAndUpdate(userId, { role }, { new: true })
       .select('-password ');
+    if (!updatedUser) {
+      throw new NotFoundException(`The user with id ${userId} does not exist`);
+    }
+    return updatedUser;
   }
 
-  async updatePassword(
-    userId: string,
-    password: string,
-  ): Promise<UserDocument> {
+  async updatePassword(userId: string, password: string) {
+    //TODO: change logic for updating password by using also lod password
+    //or update password by using email??
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new Error('Failed to update password. Such user does not exist');
+      throw new NotFoundException(`The user with id ${userId} does not exist`);
     }
     const isPasswordEqual = await this.passwordService.verifyPassword(
       password,
       user.password,
     );
     if (isPasswordEqual) {
-      throw new Error(
+      throw new BadRequestException(
         'Failed to update password. The new password cannot be the same as the current password.',
       );
     }
     const hashedPassword = await this.passwordService.hashPassword(password);
-    return this.userModel
-      .findByIdAndUpdate(userId, { password: hashedPassword })
-      .select('-password ');
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+    });
+    return 'Success';
   }
 }

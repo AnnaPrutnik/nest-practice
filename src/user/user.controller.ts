@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Body,
-  Put,
-  Query,
-  ParseIntPipe,
-  DefaultValuePipe,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Param, Body, Put, Query } from '@nestjs/common';
 import {
   ApiOperation,
   ApiTags,
@@ -54,7 +43,7 @@ export class UserController {
     description:
       'Missing header with authorization token or token is not valid.',
   })
-  async getAllUsers(
+  getAllUsers(
     @Query('limit', new ParseQueryNumber(10))
     limit: number,
     @Query('page', new ParseQueryNumber(1)) page: number,
@@ -77,12 +66,8 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'The user with such id does not exist',
   })
-  async getUser(@Param('userId', IsValidId) userId: string) {
-    const user = await this.userService.getById(userId);
-    if (!user) {
-      throw new NotFoundException(`The user with id ${userId} does not exist`);
-    }
-    return user;
+  getUser(@Param('userId', IsValidId) userId: string) {
+    return this.userService.getById(userId);
   }
 
   @Put('role/:userId')
@@ -106,15 +91,11 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'User with such id is not exist',
   })
-  async changeRole(
+  changeRole(
     @Body() body: UpdateRoleDto,
     @Param('userId', IsValidId) userId: string,
   ) {
-    const user = await this.userService.updateRole(userId, body.role);
-    if (!user) {
-      throw new NotFoundException(`The user with id ${userId} does not exist`);
-    }
-    return user;
+    return this.userService.updateRole(userId, body.role);
   }
 
   @Put('password')
@@ -126,6 +107,9 @@ export class UserController {
   @ApiBadRequestResponse({
     description: 'Bad request. User id is not valid.',
   })
+  @ApiNotFoundResponse({
+    description: 'The user with such id does not exist',
+  })
   @ApiUnauthorizedResponse({
     description:
       'Missing header with authorization token or token is not valid.',
@@ -133,15 +117,7 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'User with such id is not exist',
   })
-  async changePassword(
-    @Body() body: UpdatePasswordDto,
-    @User() user: RequestUser,
-  ) {
-    try {
-      await this.userService.updatePassword(user.id, body.password);
-      return 'Password has been updated successfully.';
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+  changePassword(@Body() body: UpdatePasswordDto, @User() user: RequestUser) {
+    return this.userService.updatePassword(user.id, body.password);
   }
 }

@@ -20,7 +20,7 @@ const userAdmin = {
   id: '643e8b025c6ac99fe1c6ba86',
   email: 'emailAdmin@mail.com',
   password: '123456',
-  role: Role.Parent,
+  role: Role.Admin,
 };
 
 const users = [userNanny, userParent, userAdmin];
@@ -38,10 +38,10 @@ export const usersStub = () => {
   };
 };
 
-export const createUserDtoStub = (): CreateUserDto => {
-  return {
-    email: userNanny.email,
-    password: userNanny.password,
-    role: userNanny.role,
-  };
+export const createUserDtoStub = (): CreateUserDto[] => {
+  return users.map((user) => ({
+    email: user.email,
+    password: user.password,
+    role: user.role,
+  }));
 };

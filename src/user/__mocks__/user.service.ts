@@ -12,6 +12,7 @@ export const UserService = jest.fn().mockReturnValue({
     if (id === userStub().id) return userStub();
     return null;
   }),
+
   updateRole: jest.fn().mockImplementation((id: string, newRole: Role) => {
     const user = userStub();
     if (id === user.id) {
@@ -20,16 +21,17 @@ export const UserService = jest.fn().mockReturnValue({
     }
     return null;
   }),
+
   updatePassword: jest
     .fn()
     .mockImplementation((id: string, newPassword: Role) => {
       const user = userStub();
       if (id !== user.id) {
-        throw new Error('Not Found User Error');
+        return null;
       }
 
       if (user.password === newPassword) {
-        throw new Error('The Same Password Error');
+        return null;
       }
 
       return 'success';
