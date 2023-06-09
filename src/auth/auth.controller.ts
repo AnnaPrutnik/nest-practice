@@ -17,7 +17,6 @@ import {
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiCookieAuth,
-  ApiBody,
 } from '@nestjs/swagger';
 import { Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';

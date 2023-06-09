@@ -18,8 +18,12 @@ export class UserService {
   ) {}
   async create(user: CreateUserDto): Promise<UserDocument> {
     const role = user.role ? user.role : Role.Parent;
+    const hashedPassword = await this.passwordService.hashPassword(
+      user.password,
+    );
     const newUser = {
       ...user,
+      password: hashedPassword,
       role,
     };
     const createdUser = new this.userModel(newUser);
@@ -72,16 +76,19 @@ export class UserService {
   }
 
   async updatePassword(userId: string, password: string) {
-    //TODO: change logic for updating password by using also lod password
+    //TODO: change logic for updating password by using also old password
     //or update password by using email??
+    //add password validation
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new NotFoundException(`The user with id ${userId} does not exist`);
     }
+
     const isPasswordEqual = await this.passwordService.verifyPassword(
       password,
       user.password,
     );
+
     if (isPasswordEqual) {
       throw new BadRequestException(
         'Failed to update password. The new password cannot be the same as the current password.',

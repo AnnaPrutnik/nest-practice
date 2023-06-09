@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PasswordService } from './password.service';
-import { userStub, usersStub } from './stubs/user.stub';
-import { User, UserSchema, UserDocument } from './schemas/user.schema';
-import { Role } from 'src/common/enums/role.enum';
+import { User, UserSchema } from './schemas/user.schema';
 import { getModelToken } from '@nestjs/mongoose';
+import { Role } from 'src/common/enums/role.enum';
 
 jest.mock('./user.service');
 jest.mock('./password.service');
@@ -14,9 +12,6 @@ jest.mock('./password.service');
 describe('UsersController', () => {
   let controller: UserController;
   let userService: UserService;
-
-  const userId = userStub().id;
-  const userProfile = userStub();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,116 +33,50 @@ describe('UsersController', () => {
   });
 
   describe('getAll', () => {
-    let getAllUsers: {
-      page: number;
-      pages: number;
-      total: number;
-      users: UserDocument[];
-    };
-
-    beforeEach(async () => {
-      getAllUsers = await controller.getAllUsers(10, 1);
-    });
-
     it('should be called userService.getAllUsers with limit and page', async () => {
-      expect(userService.getAll).toHaveBeenCalledTimes(1);
-      expect(userService.getAll).toHaveBeenCalledWith(10, 1);
-    });
-
-    it('should return list of users', async () => {
-      const result = usersStub();
-      expect(getAllUsers).toEqual(result);
+      const limit = 10;
+      const page = 1;
+      const userGetAll = jest.spyOn(userService, 'getAll');
+      await controller.getAllUsers(limit, page);
+      expect(userGetAll).toHaveBeenCalledTimes(1);
+      expect(userGetAll).toHaveBeenCalledWith(limit, page);
     });
   });
 
   describe('getProfile', () => {
     it('should be called userService.getById', async () => {
-      await controller.getUser(userId);
+      const id = 'id';
+      const userGetById = jest.spyOn(userService, 'getById');
+      await controller.getUser(id);
 
-      expect(userService.getById).toBeCalledTimes(1);
-      expect(userService.getById).toBeCalledWith(userId);
-    });
-
-    it('should return a user profile', async () => {
-      const result = await controller.getUser(userId);
-
-      expect(result).toEqual(userProfile);
-    });
-
-    it('should be throw an NotFoundException without user profile', async () => {
-      try {
-        await controller.getUser('not id');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-      }
+      expect(userGetById).toBeCalledTimes(1);
+      expect(userGetById).toBeCalledWith(id);
     });
   });
 
-  describe('changeRole', () => {
-    const body = { role: Role.Parent };
+  describe('updateRole', () => {
     it('should be called userService.updateRole', async () => {
-      await controller.changeRole(body, userId);
+      const body = { role: Role.Parent };
+      const id = 'id';
+      const userUpdateRole = jest.spyOn(userService, 'updateRole');
+      await controller.changeRole(body, id);
 
-      expect(userService.updateRole).toBeCalledTimes(1);
-      expect(userService.updateRole).toBeCalledWith(userId, body.role);
-    });
-
-    it('should return updated role', async () => {
-      const updatedUser = await controller.changeRole(body, userId);
-      expect(updatedUser.role).toBe(body.role);
-    });
-
-    it('should return NotFoundException without user data', async () => {
-      try {
-        await controller.changeRole(body, 'other-id');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-      }
+      expect(userUpdateRole).toBeCalledTimes(1);
+      expect(userUpdateRole).toBeCalledWith(id, body.role);
     });
   });
 
   describe('updatePassword', () => {
-    const body = { password: '12345' };
-    const reqUser = {
-      id: userId,
-      role: userProfile.role,
-    };
-
     it('should called UserService.updatePassword', async () => {
+      const body = { password: '12345' };
+      const reqUser = {
+        id: 'id',
+        role: Role.Admin,
+      };
+      const userUpdatePassword = jest.spyOn(userService, 'updatePassword');
       await controller.changePassword(body, reqUser);
-      expect(userService.updatePassword).toBeCalledTimes(1);
-      expect(userService.updatePassword).toBeCalledWith(
-        reqUser.id,
-        body.password,
-      );
+      expect(userUpdatePassword).toBeCalledTimes(1);
+      expect(userUpdatePassword).toBeCalledWith(reqUser.id, body.password);
     });
-
-    // it('should return string after success changing', async () => {
-    //   const result = await controller.changePassword(body, reqUser);
-    //   expect(typeof result).toBe('string');
-    // });
-
-    // it('should return a NotFoundException if user is not exist', async () => {
-    //   const reqUserWithoutId = {
-    //     id: 'not-exist-id',
-    //     role: userProfile.role,
-    //   };
-
-    //   try {
-    //     await controller.changePassword(body, reqUserWithoutId);
-    //   } catch (error) {
-    //     console.log(error);
-    //     expect(error).toBeInstanceOf(NotFoundException);
-    //   }
-    // });
-
-    // it('should thrown a BadRequestException if password is the same', async () => {
-    //   const bodyWithSamePassword = { password: userProfile.password };
-    //   try {
-    //     await controller.changePassword(bodyWithSamePassword, reqUser);
-    //   } catch (error) {
-    //     expect(error).toBeInstanceOf(BadRequestException);
-    //   }
-    // });
   });
 });

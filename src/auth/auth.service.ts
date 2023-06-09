@@ -17,13 +17,8 @@ export class AuthService {
     if (existedUser) {
       throw new Error(`User with email ${userInfo.email} is already exist`);
     }
-    const hashedPassword = await this.passwordService.hashPassword(
-      userInfo.password,
-    );
-    const newUser = await this.userService.create({
-      ...userInfo,
-      password: hashedPassword,
-    });
+
+    const newUser = await this.userService.create(userInfo);
     return this.tokenService.create(newUser._id.toString(), userAgent);
   }
 

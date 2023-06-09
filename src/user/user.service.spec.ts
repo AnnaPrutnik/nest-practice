@@ -1,7 +1,7 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
-
+import mongoose from 'mongoose';
 import {
   connectDB,
   dropDB,
@@ -9,16 +9,17 @@ import {
 } from 'src/test-utils/mongo/MongooseTestModule';
 import { UserController } from './user.controller';
 import { PasswordService } from './password.service';
-import { createUserDtoStub } from './stubs/user.stub';
-import { UserSchema, UserDocument, User } from './schemas/user.schema';
+import { usersForDB, testPassword } from './stubs/user.stub';
+import { UserSchema, UserDocument } from './schemas/user.schema';
 import { UserService } from './user.service';
-import mongoose from 'mongoose';
+
 import { Role } from 'src/common/enums/role.enum';
 
 jest.mock('./password.service.ts');
 
 describe('UserService', () => {
   let userService: UserService;
+  let passwordService: PasswordService;
   let mongoUri: string;
   let testUser: UserDocument;
 
@@ -34,14 +35,13 @@ describe('UserService', () => {
     }).compile();
 
     userService = module.get<UserService>(UserService);
+    passwordService = module.get<PasswordService>(PasswordService);
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
-
-    const users = createUserDtoStub();
-    for (const index in users) {
-      await userService.create(users[index]);
+    for (const index in usersForDB) {
+      await userService.create(usersForDB[index]);
     }
     const result = await userService.getAll(1, 1);
     testUser = result.users[0];
@@ -66,23 +66,30 @@ describe('UserService', () => {
       role: Role.Admin,
     };
 
-    it('should return the saved object', async () => {
+    it('should return the new users data', async () => {
       const createdUser = await userService.create(newUser);
       expect(createdUser.email).toEqual(newUser.email);
+      expect(createdUser.role).toEqual(newUser.role);
+    });
+
+    it('should create default role as parent', async () => {
+      delete newUser.role;
+      const createdUser = await userService.create(newUser);
+      expect(createdUser.role).toBe(Role.Parent);
+    });
+
+    it('should return hashedPassword', async () => {
+      const createdUser = await userService.create(newUser);
+      const hashMethod = jest.spyOn(passwordService, 'hashPassword');
+      expect(hashMethod).toBeCalled();
+      expect(createdUser.password).not.toBe(newUser.password);
     });
 
     it('should throw an Error if email have been already used', async () => {
       await userService.create(newUser);
-      let result;
-      let error;
-      try {
-        result = await userService.create(newUser);
-      } catch (err) {
-        error = err;
-      } finally {
-        expect(error.code).toBe(11000);
-        expect(result).toBeUndefined();
-      }
+      await expect(userService.create(newUser)).rejects.toThrow(
+        `E11000 duplicate key error collection: test.users index: email_1 dup key: { email: \"${newUser.email}\" }`,
+      );
     });
   });
 
@@ -96,7 +103,7 @@ describe('UserService', () => {
       expect(result.users.length).toBe(3);
     });
 
-    it('should return total users in result', async () => {
+    it('should return total users equal 3', async () => {
       expect(result).toHaveProperty('total');
       expect(result.total).toBe(3);
     });
@@ -108,18 +115,16 @@ describe('UserService', () => {
       expect(user.id).toEqual(testUser.id);
     });
 
+    it('should return user without password', async () => {
+      const user = await userService.getById(testUser.id);
+      expect(user.password).toBeUndefined();
+    });
+
     it('should return NotFoundException if user not exist', async () => {
-      const someId = new mongoose.Types.ObjectId();
-      let result;
-      let error;
-      try {
-        result = await userService.getById(someId.toString());
-      } catch (err) {
-        error = err;
-      } finally {
-        expect(result).toBeUndefined();
-        expect(error).toBeInstanceOf(NotFoundException);
-      }
+      const randomId = new mongoose.Types.ObjectId();
+      await expect(
+        userService.getById(randomId.toString()),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -132,24 +137,19 @@ describe('UserService', () => {
 
     it('should return NotFoundException if user not exist', async () => {
       const someEmail = 'blabla@mail.com';
-      let result;
-      let error;
-      try {
-        result = await userService.getByEmail(someEmail);
-      } catch (err) {
-        error = err;
-      } finally {
-        expect(result).toBeUndefined();
-        expect(error).toBeInstanceOf(NotFoundException);
-      }
+      await expect(userService.getByEmail(someEmail)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   describe('updateRole', () => {
-    it('should return new Role', async () => {
+    it('should update only Role', async () => {
       const newRole = Role.Admin;
       const updatedUser = await userService.updateRole(testUser.id, newRole);
       expect(updatedUser.role).toBe(newRole);
+      expect(updatedUser.id).toBe(testUser.id);
+      expect(updatedUser.email).toBe(testUser.email);
     });
 
     it('should not return a user password', async () => {
@@ -161,30 +161,37 @@ describe('UserService', () => {
     it('should return NotFoundException if user is not exist', async () => {
       const newRole = Role.Admin;
       const someId = new mongoose.Types.ObjectId();
-      let result;
-      let error;
-      try {
-        result = await userService.updateRole(someId.toString(), newRole);
-      } catch (err) {
-        error = err;
-      } finally {
-        expect(result).toBeUndefined();
-        expect(error).toBeInstanceOf(NotFoundException);
-      }
+      await expect(
+        userService.updateRole(someId.toString(), newRole),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('should return NotFoundException if role is not valid', async () => {
-      const notExistRole = 'role';
-      let result;
-      let error;
-      try {
-        result = await userService.updateRole(testUser.id, notExistRole);
-      } catch (err) {
-        error = err;
-      } finally {
-        expect(result).toBeUndefined();
-        expect(error).toBeInstanceOf(BadRequestException);
-      }
+    it('should return BadRequestException if role is not valid', async () => {
+      const notExistedRole = 'role';
+      await expect(
+        userService.updateRole(testUser.id, notExistedRole),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('update password', () => {
+    const newPassword = 'newpass';
+    it('should return string Success after changing password', async () => {
+      const result = await userService.updatePassword(testUser.id, newPassword);
+      expect(result).toBe('Success');
+    });
+
+    it('should return NotFoundException if user is not exist', async () => {
+      const randomId = new mongoose.Types.ObjectId();
+      await expect(
+        userService.updatePassword(randomId.toString(), newPassword),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('should return BadRequestException if new password the same as old', async () => {
+      await expect(
+        userService.updatePassword(testUser.id, testPassword),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });
