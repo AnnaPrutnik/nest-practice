@@ -14,7 +14,8 @@ describe('PasswordService', () => {
   let configService: ConfigService;
   let password: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
       providers: [
@@ -38,10 +39,6 @@ describe('PasswordService', () => {
 
     passwordService = module.get<PasswordService>(PasswordService);
     configService = module.get<ConfigService>(ConfigService);
-  });
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
     password = 'some-pass';
   });
 

@@ -4,9 +4,11 @@ import { randomBytes } from 'crypto';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Token } from './schemas/token.schema';
 import { Types } from 'mongoose';
+import { DateTime } from 'luxon';
+import { Token } from './schemas/token.schema';
 
+export const defaultRefreshExpire = 35;
 @Injectable()
 export class TokenService {
   constructor(
@@ -22,9 +24,12 @@ export class TokenService {
   }
 
   private expireTokenDate() {
-    const today = new Date();
-    const expireIn = Number(this.configService.get<number>('REFRESH_EXPIRE'));
-    return new Date(new Date().setDate(today.getDate() + expireIn));
+    const today = DateTime.now();
+    const expireIn =
+      Number(this.configService.get<number>('REFRESH_EXPIRE')) ||
+      defaultRefreshExpire;
+
+    return today.plus({ days: expireIn });
   }
 
   private async saveRefreshToken(token, userId, userAgent) {
@@ -80,13 +85,15 @@ export class TokenService {
     if (!isValidToken) {
       return null;
     }
-    const tokens = await this.generateTokens(tokenDoc.userId.toString());
 
-    const expires = this.expireTokenDate();
-    await this.tokenModel.findByIdAndUpdate(tokenDoc._id, {
-      expires,
-      refreshToken: tokens.refreshToken,
-    });
+    const tokens = await this.create(tokenDoc.userId.toString(), userAgent);
+    // const tokens = await this.generateTokens(tokenDoc.userId.toString());
+
+    // const expires = this.expireTokenDate();
+    // await this.tokenModel.findByIdAndUpdate(tokenDoc._id, {
+    //   expires,
+    //   refreshToken: tokens.refreshToken,
+    // });
     return tokens;
   }
 

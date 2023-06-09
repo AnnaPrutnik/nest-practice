@@ -10,7 +10,7 @@ import {
 import { UserController } from './user.controller';
 import { PasswordService } from './password.service';
 import { usersForDB, testPassword } from './stubs/user.stub';
-import { UserSchema, UserDocument } from './schemas/user.schema';
+import { UserSchema, UserDocument, User } from './schemas/user.schema';
 import { UserService } from './user.service';
 
 import { Role } from 'src/common/enums/role.enum';
@@ -28,7 +28,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         MongooseModule.forRoot(mongoUri),
-        MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+        MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
       ],
       controllers: [UserController],
       providers: [UserService, PasswordService],
