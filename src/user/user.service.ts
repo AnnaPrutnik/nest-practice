@@ -16,7 +16,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     private passwordService: PasswordService,
   ) {}
-  async create(user: CreateUserDto): Promise<UserDocument> {
+  async create(user: CreateUserDto) {
     const role = user.role ? user.role : Role.Parent;
     const hashedPassword = await this.passwordService.hashPassword(
       user.password,
@@ -26,8 +26,7 @@ export class UserService {
       password: hashedPassword,
       role,
     };
-    const createdUser = new this.userModel(newUser);
-    return createdUser.save();
+    return this.userModel.create(newUser);
   }
 
   async getAll(limit: number, page: number) {
@@ -53,9 +52,7 @@ export class UserService {
   async getByEmail(email: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ email });
     if (!user) {
-      throw new NotFoundException(
-        `The user with email ${email} does not exist`,
-      );
+      return null;
     }
     return user;
   }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PasswordService } from 'src/user/password.service';
 import { TokenService } from 'src/token/token.service';
@@ -15,27 +15,29 @@ export class AuthService {
   async signUp(userInfo: CreateUserDto, userAgent: string) {
     const existedUser = await this.userService.getByEmail(userInfo.email);
     if (existedUser) {
-      throw new Error(`User with email ${userInfo.email} is already exist`);
+      throw new BadRequestException(
+        `User with email ${userInfo.email} is already exist`,
+      );
     }
-
     const newUser = await this.userService.create(userInfo);
-    return this.tokenService.create(newUser._id.toString(), userAgent);
+    return this.tokenService.create(newUser.id, userAgent);
   }
 
   async signIn(email: string, password: string, userAgent: string) {
     const user = await this.userService.getByEmail(email);
     if (!user) {
-      return null;
+      throw new BadRequestException('Bad Credentials');
     }
+
     const isPasswordValid = await this.passwordService.verifyPassword(
       password,
       user.password,
     );
-    console.log('isPasswordValid', isPasswordValid);
+
     if (!isPasswordValid) {
-      return null;
+      throw new BadRequestException('Bad Credentials');
     }
-    return this.tokenService.create(user._id.toString(), userAgent);
+    return this.tokenService.create(user.id, userAgent);
   }
 
   async refresh(refreshToken: string, userAgent: string) {

@@ -49,18 +49,16 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    try {
-      const tokens = await this.authService.signUp(body, userAgent);
-      const { accessToken, refreshToken } = tokens;
-      res.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-      });
-      res.status(201).json({ accessToken });
-      return;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    const { accessToken, refreshToken } = await this.authService.signUp(
+      body,
+      userAgent,
+    );
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    res.status(201).json({ accessToken });
+    return;
   }
 
   @Post('login')
@@ -77,15 +75,12 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    const tokens = await this.authService.signIn(
+    const { accessToken, refreshToken } = await this.authService.signIn(
       body.email,
       body.password,
       userAgent,
     );
-    if (!tokens) {
-      throw new BadRequestException('Bad Credentials');
-    }
-    const { accessToken, refreshToken } = tokens;
+
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,

@@ -135,11 +135,10 @@ describe('UserService', () => {
       expect(user.email).toEqual(testUser.email);
     });
 
-    it('should return NotFoundException if user not exist', async () => {
+    it('should return null if user not exist', async () => {
       const someEmail = 'blabla@mail.com';
-      await expect(userService.getByEmail(someEmail)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      const result = await userService.getByEmail(someEmail);
+      expect(result).toBeNull();
     });
   });
 
