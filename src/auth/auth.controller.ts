@@ -5,7 +5,6 @@ import {
   Get,
   Response,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -38,7 +37,7 @@ export class AuthController {
     summary: 'Register a new user account and obtain access token',
   })
   @ApiCreatedResponse({
-    description: '"The user has successfully signed up',
+    description: 'The user has successfully signed up',
   })
   @ApiBadRequestResponse({
     description: 'Bad request. Email is already used or validation errors',
@@ -101,21 +100,19 @@ export class AuthController {
   @Public()
   async refresh(
     @UserAgent() userAgent: string,
-    @Cookie('refresh_token') refreshToken: string,
+    @Cookie('refresh_token') userRefreshToken: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    const tokens = await this.authService.refresh(refreshToken, userAgent);
-    if (!tokens) {
-      throw new UnauthorizedException(
-        'Refresh token does not exist or is invalid',
-      );
-    }
+    const { refreshToken, accessToken } = await this.authService.refresh(
+      userRefreshToken,
+      userAgent,
+    );
 
-    res.cookie('refresh_token', tokens.refreshToken, {
+    res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-    res.status(201).json({ accessToken: tokens.accessToken });
+    res.status(200).json({ accessToken });
     return;
   }
 

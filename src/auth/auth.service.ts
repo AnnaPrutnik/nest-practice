@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { PasswordService } from 'src/user/password.service';
 import { TokenService } from 'src/token/token.service';
@@ -41,7 +45,18 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string, userAgent: string) {
-    return this.tokenService.updateRefreshToken(refreshToken, userAgent);
+    const tokens = await this.tokenService.updateRefreshToken(
+      refreshToken,
+      userAgent,
+    );
+
+    if (!tokens) {
+      throw new UnauthorizedException(
+        'Refresh token does not exist or is invalid',
+      );
+    }
+
+    return tokens;
   }
 
   async logout(userId: string, userAgent: string) {

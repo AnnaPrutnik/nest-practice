@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
@@ -10,7 +11,6 @@ import { AuthController } from './auth.controller';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { Token, TokenSchema } from 'src/token/schemas/token.schema';
 import { testUser, createDto } from './stubs/auth.stub';
-import { BadRequestException } from '@nestjs/common';
 
 jest.mock('src/user/user.service');
 jest.mock('src/user/password.service');
@@ -24,8 +24,6 @@ describe('AuthService', () => {
   const testUserAgent = 'Mozilla Firefox 3.4';
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -48,6 +46,10 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(authService).toBeDefined();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('signUp', () => {
@@ -131,10 +133,16 @@ describe('AuthService', () => {
   describe('refresh', () => {
     it('should have been called tokenService.updateRefreshToken', async () => {
       const refreshToken = 'refreshToken';
+      const tokens = {
+        refreshToken: 'refresh',
+        accessToken: 'access',
+      };
       const updateRefreshTokenSpy = jest.spyOn(
         tokenService,
         'updateRefreshToken',
       );
+
+      updateRefreshTokenSpy.mockResolvedValue(tokens);
 
       await authService.refresh(refreshToken, testUserAgent);
 
@@ -142,6 +150,16 @@ describe('AuthService', () => {
         refreshToken,
         testUserAgent,
       );
+    });
+
+    it('should return UnauthorizedException if token is not valid', async () => {
+      const refreshToken = 'refreshToken';
+      jest
+        .spyOn(tokenService, 'updateRefreshToken')
+        .mockResolvedValueOnce(null);
+      await expect(
+        authService.refresh(refreshToken, testUserAgent),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });
 
@@ -153,6 +171,11 @@ describe('AuthService', () => {
       await authService.logout(id, testUserAgent);
 
       expect(removeTokenSpy).toHaveBeenCalledWith(id, testUserAgent);
+    });
+
+    it('should return undefined', async () => {
+      const result = await authService.logout('id', testUserAgent);
+      expect(result).toBeUndefined();
     });
   });
 });
