@@ -90,10 +90,10 @@ export class TokenService {
   }
 
   async removeRefreshToken(userId: string, userAgent: string) {
-    const record = await this.tokenModel.findOne({ userId, userAgent });
-    if (record) {
-      await this.tokenModel.findByIdAndRemove(record._id);
-    }
+    await this.tokenModel.findOneAndRemove({
+      userId,
+      userAgent,
+    });
     return;
   }
 }

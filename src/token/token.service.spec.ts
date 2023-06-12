@@ -195,5 +195,13 @@ describe('TokenService', () => {
       const token = await tokenModel.findById(testToken._id);
       expect(token).toBeNull();
     });
+
+    it('should do nothing if pair of userId and userAgent is not exist', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      const userAgent = 'Mozilla';
+      await tokenService.removeRefreshToken(userId.toString(), userAgent);
+      const bd = await tokenModel.find({}).lean();
+      expect(bd.length).toBe(1);
+    });
   });
 });
