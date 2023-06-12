@@ -8,7 +8,6 @@ import { Types } from 'mongoose';
 import { DateTime } from 'luxon';
 import { Token } from './schemas/token.schema';
 
-export const defaultRefreshExpire = 35;
 @Injectable()
 export class TokenService {
   constructor(
@@ -25,9 +24,7 @@ export class TokenService {
 
   private expireTokenDate() {
     const today = DateTime.now();
-    const expireIn =
-      Number(this.configService.get<number>('REFRESH_EXPIRE')) ||
-      defaultRefreshExpire;
+    const expireIn = Number(this.configService.get<number>('REFRESH_EXPIRE'));
 
     return today.plus({ days: expireIn });
   }
@@ -44,11 +41,15 @@ export class TokenService {
     return;
   }
 
-  private async verifyRefreshToken(
+  private verifyRefreshToken(
     tokenDoc: Token & { _id: Types.ObjectId },
     userAgent: string,
   ) {
-    const isExpireToken = tokenDoc.expires < new Date();
+    const today = DateTime.now();
+    const end = tokenDoc.expires;
+
+    const isExpireToken = today > end;
+
     const isSameUserAgent = userAgent === tokenDoc.userAgent;
     if (isExpireToken || !isSameUserAgent) {
       return false;
@@ -66,14 +67,10 @@ export class TokenService {
     return { accessToken, refreshToken };
   }
 
-  async verifyAccessToken(token: string): Promise<{ id: string } | null> {
-    const payload = await this.jwtService.verifyAsync(token, {
+  async verifyAccessToken(token: string): Promise<{ id: string }> {
+    return this.jwtService.verifyAsync(token, {
       secret: this.configService.get<string>('JWT_SECRET'),
     });
-    if (!payload) {
-      return null;
-    }
-    return payload;
   }
 
   async updateRefreshToken(refreshToken: string, userAgent: string) {
@@ -81,19 +78,14 @@ export class TokenService {
     if (!tokenDoc) {
       return null;
     }
+
     const isValidToken = this.verifyRefreshToken(tokenDoc, userAgent);
+
     if (!isValidToken) {
       return null;
     }
 
     const tokens = await this.create(tokenDoc.userId.toString(), userAgent);
-    // const tokens = await this.generateTokens(tokenDoc.userId.toString());
-
-    // const expires = this.expireTokenDate();
-    // await this.tokenModel.findByIdAndUpdate(tokenDoc._id, {
-    //   expires,
-    //   refreshToken: tokens.refreshToken,
-    // });
     return tokens;
   }
 

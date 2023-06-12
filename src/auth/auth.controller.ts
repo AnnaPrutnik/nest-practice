@@ -27,7 +27,6 @@ import { User } from 'src/common/decorators/user.decorator';
 import { RequestUser } from 'src/common/interfaces/requestUser.interface';
 import { UserAgent } from 'src/common/decorators/userAgent.decorator';
 import { Cookie } from 'src/common/decorators/cookies.decorator';
-import { User as UserSchema } from 'src/user/schemas/user.schema';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -78,7 +77,6 @@ export class AuthController {
     @UserAgent() userAgent: string,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    console.log(body);
     const tokens = await this.authService.signIn(
       body.email,
       body.password,

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
+import { DateTime } from 'luxon';
 
 export type TokenDocument = HydratedDocument<Token>;
 
@@ -16,7 +17,7 @@ export class Token {
   refreshToken: string;
 
   @Prop({ required: true })
-  expires: Date;
+  expires: DateTime;
 
   @Prop({ required: true })
   userAgent: string;

@@ -3,7 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UserController } from './user.controller';
-import { PasswordService, defaultSalt } from './password.service';
+import { PasswordService } from './password.service';
 import { User, UserSchema } from './schemas/user.schema';
 import { UserService } from './user.service';
 
@@ -25,12 +25,7 @@ describe('PasswordService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn((key: string) => {
-              if (key === 'SALT_ROUNDS') {
-                return 2;
-              }
-              return null;
-            }),
+            get: jest.fn(),
           },
         },
         { provide: getModelToken(User.name), useValue: UserSchema },
@@ -47,21 +42,6 @@ describe('PasswordService', () => {
   });
 
   describe('hashPassword', () => {
-    it("should return default value if there's no key SALT_ROUNDS", async () => {
-      jest.spyOn(configService, 'get').mockReturnValue(undefined);
-
-      const bcryptFn = jest.spyOn(bcrypt, 'hash');
-      await passwordService.hashPassword(password);
-      expect(bcryptFn).toHaveBeenCalledWith(password, defaultSalt);
-    });
-
-    it('should return default value if SALT_ROUNDS is no number value', async () => {
-      jest.spyOn(configService, 'get').mockReturnValue('some-string');
-      const bcryptFn = jest.spyOn(bcrypt, 'hash');
-      await passwordService.hashPassword(password);
-      expect(bcryptFn).toHaveBeenCalledWith(password, defaultSalt);
-    });
-
     it('should return 10 if SALT_ROUND equal 10', async () => {
       jest.spyOn(configService, 'get').mockReturnValue('10');
       const bcryptFn = jest.spyOn(bcrypt, 'hash');
