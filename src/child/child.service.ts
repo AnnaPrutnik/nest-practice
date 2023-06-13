@@ -1,17 +1,30 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
-import { Child } from './schemas/child.schema';
-import * as moment from 'moment';
+import { Child, ChildDocument } from './schemas/child.schema';
+
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class ChildService {
   constructor(@InjectModel(Child.name) private childModel: Model<Child>) {}
 
-  getAge(birthday) {
-    return moment().diff(birthday, 'years');
+  getAge(birthday: Date) {
+    const now = DateTime.now();
+    const convertBirthday = DateTime.fromJSDate(birthday);
+    const age = now.diff(convertBirthday, ['years', 'months']).toObject();
+    return age.years;
+  }
+
+  private transformChildResponse(childDoc: ChildDocument) {
+    const { isDeleted, ...child } = childDoc.toObject();
+    return { ...child, age: this.getAge(child.birthday) };
   }
 
   async create(body: CreateChildDto, userId: string) {
@@ -20,38 +33,58 @@ export class ChildService {
       const existedChild = children.find(
         (child) => child.name === body.name && child.gender === body.gender,
       );
-      const isTheSameDate = moment(existedChild?.birthday).isSame(
-        moment(body.birthday),
-        'date',
-      );
-      if (isTheSameDate && existedChild.isDeleted) {
-        return this.childModel.findByIdAndUpdate(
-          existedChild._id,
-          { ...body, isDeleted: false },
-          { new: true },
-        );
-      }
-      if (isTheSameDate && !existedChild.isDeleted) {
-        throw new Error('Child has been already registered');
+      if (existedChild) {
+        const existedChildBirthday = DateTime.fromJSDate(existedChild.birthday);
+        const newChildBirthday = DateTime.fromJSDate(body.birthday);
+        const isTheSameDate = existedChildBirthday.diff(newChildBirthday, [
+          'year',
+          'month',
+          'day',
+        ]);
+
+        if (isTheSameDate && existedChild.isDeleted) {
+          return this.childModel.findByIdAndUpdate(
+            existedChild._id,
+            { ...body, isDeleted: false },
+            { new: true },
+          );
+        }
+        if (isTheSameDate && !existedChild.isDeleted) {
+          throw new BadRequestException('Child has been already registered');
+        }
       }
     }
-    return this.childModel.create({ ...body, parent: userId });
+    const child = await this.childModel.create({ ...body, parent: userId });
+    return this.transformChildResponse(child);
   }
 
-  async findOneParentChildren(parentId: string) {
-    return this.childModel.find({ parent: parentId, isDeleted: false });
+  async findChildrenByParent(parentId: string) {
+    const children = await this.childModel.find({
+      parent: parentId,
+      isDeleted: false,
+    });
+
+    return children
+      ? children.map((child) => this.transformChildResponse(child))
+      : null;
   }
 
   async findOneChild(childId: string, parentId: string) {
-    return this.childModel.findOne({
+    const child = await this.childModel.findOne({
       _id: childId,
       parent: parentId,
       isDeleted: false,
     });
+
+    return child ? this.transformChildResponse(child) : null;
   }
 
   async findById(childId: string) {
-    return this.childModel.findOne({ _id: childId, isDeleted: false });
+    const child = await this.childModel.findOne({
+      _id: childId,
+      isDeleted: false,
+    });
+    return child ? this.transformChildResponse(child) : null;
   }
 
   async update(
@@ -59,19 +92,28 @@ export class ChildService {
     parentId: string,
     updateChildDto: UpdateChildDto,
   ) {
-    return this.childModel.findOneAndUpdate(
+    const updatedChild = await this.childModel.findOneAndUpdate(
       { _id: childId, parent: parentId },
       updateChildDto,
       {
         new: true,
       },
     );
+
+    if (!updatedChild) {
+      throw new BadRequestException('No child with such id');
+    }
+    return this.transformChildResponse(updatedChild);
   }
 
   async remove(childId: string, parentId: string) {
-    return this.childModel.findOneAndUpdate(
+    const child = await this.childModel.findOneAndUpdate(
       { _id: childId, parent: parentId },
       { isDeleted: true },
     );
+    if (!child) {
+      throw new BadRequestException('No child with such id');
+    }
+    return;
   }
 }

@@ -59,12 +59,7 @@ export class ChildController {
       'Bad request: child has been already created or validation error',
   })
   async create(@Body() body: CreateChildDto, @User() user: RequestUser) {
-    try {
-      const child = await this.childService.create(body, user.id);
-      return child;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.childService.create(body, user.id);
   }
 
   @Get('own')
@@ -79,7 +74,7 @@ export class ChildController {
       'Forbidden error. User are not authorized to access this resource',
   })
   findOwnChild(@User() user: RequestUser) {
-    return this.childService.findOneParentChildren(user.id);
+    return this.childService.findChildrenByParent(user.id);
   }
 
   @Get('own/:childId')
@@ -101,11 +96,7 @@ export class ChildController {
     @User() user: RequestUser,
     @Param('childId', IsValidId) childId: string,
   ) {
-    const child = await this.childService.findOneChild(childId, user.id);
-    if (!child) {
-      throw new NotFoundException('No child with such id');
-    }
-    return child;
+    return this.childService.findOneChild(childId, user.id);
   }
 
   @Get('family/:parentId')
@@ -125,7 +116,7 @@ export class ChildController {
     description: 'Bad request: validation error',
   })
   findAll(@Param('parentId', IsValidId) parentId: string) {
-    return this.childService.findOneParentChildren(parentId);
+    return this.childService.findChildrenByParent(parentId);
   }
 
   @Get(':childId')
@@ -145,11 +136,7 @@ export class ChildController {
     description: 'Bad request: validation error',
   })
   async getOneChild(@Param('childId', IsValidId) childId: string) {
-    const child = await this.childService.findById(childId);
-    if (!child) {
-      throw new NotFoundException('No child with such id');
-    }
-    return child;
+    return this.childService.findById(childId);
   }
 
   @Put(':childId')
@@ -173,15 +160,7 @@ export class ChildController {
     @Param('childId', IsValidId) childId: string,
     @Body() updateChildDto: UpdateChildDto,
   ) {
-    const updatedChild = await this.childService.update(
-      childId,
-      user.id,
-      updateChildDto,
-    );
-    if (!updatedChild) {
-      throw new BadRequestException('No child with such id');
-    }
-    return updatedChild;
+    return this.childService.update(childId, user.id, updateChildDto);
   }
 
   @Delete(':childId')
@@ -204,10 +183,7 @@ export class ChildController {
     @Param('childId', IsValidId) childId: string,
     @User() user: RequestUser,
   ) {
-    const child = await this.childService.remove(childId, user.id);
-    if (!child) {
-      throw new BadRequestException('No child with such id');
-    }
+    await this.childService.remove(childId, user.id);
     return 'success';
   }
 }

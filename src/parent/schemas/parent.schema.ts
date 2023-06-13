@@ -66,8 +66,8 @@ export class Parent {
 
 export const ParentSchema = SchemaFactory.createForClass(Parent);
 
-ParentSchema.virtual('children', {
-  ref: Child.name,
-  localField: '_id',
-  foreignField: 'parent',
-});
+// ParentSchema.virtual('children', {
+//   ref: Child.name,
+//   localField: '_id',
+//   foreignField: 'parent',
+// });

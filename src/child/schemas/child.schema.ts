@@ -4,7 +4,6 @@ import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Parent } from 'src/parent/schemas/parent.schema';
 import { Gender } from 'src/common/enums/gender.enum';
-import * as moment from 'moment';
 
 export type ChildDocument = HydratedDocument<Child>;
 
@@ -64,12 +63,8 @@ export class Child {
   @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Parent' })
   parent: Parent;
 
-  @Prop({ default: false, select: false })
+  @Prop({ default: false })
   isDeleted: boolean;
 }
 
 export const ChildSchema = SchemaFactory.createForClass(Child);
-
-ChildSchema.virtual('age').get(function () {
-  return moment().diff(this.birthday, 'years');
-});

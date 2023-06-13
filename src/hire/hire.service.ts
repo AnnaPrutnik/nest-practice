@@ -70,7 +70,7 @@ export class HireService {
       );
     }
     //check is own children and also is children have acceptable age for nanny
-    const ownChildren = await this.childService.findOneParentChildren(parentId);
+    const ownChildren = await this.childService.findChildrenByParent(parentId);
     const validateAgeRange = children.every((child) => {
       const ownChild = ownChildren.find((ownChild) => ownChild.id === child);
       if (!ownChild) {

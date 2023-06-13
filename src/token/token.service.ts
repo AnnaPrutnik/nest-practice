@@ -25,8 +25,7 @@ export class TokenService {
   private expireTokenDate() {
     const today = DateTime.now();
     const expireIn = Number(this.configService.get<number>('REFRESH_EXPIRE'));
-
-    return today.plus({ days: expireIn });
+    return today.plus({ days: expireIn }).toJSDate();
   }
 
   private async saveRefreshToken(token, userId, userAgent) {
@@ -46,7 +45,7 @@ export class TokenService {
     userAgent: string,
   ) {
     const today = DateTime.now();
-    const end = tokenDoc.expires;
+    const end = DateTime.fromJSDate(tokenDoc.expires);
 
     const isExpireToken = today > end;
 
