@@ -20,7 +20,6 @@ import {
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
   ApiForbiddenResponse,
-  ApiNotFoundResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
@@ -63,12 +62,7 @@ export class NannyController {
       'Bad request: nanny has been already exist or validation error',
   })
   async create(@Body() body: CreateNannyDto, @User() user: RequestUser) {
-    try {
-      const nanny = await this.nannyService.create(body, user.id);
-      return nanny;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.nannyService.create(body, user.id);
   }
 
   @Get('all')
@@ -101,13 +95,8 @@ export class NannyController {
     description:
       'Missing header with authorization token or token is not valid.',
   })
-  @ApiNotFoundResponse({ description: 'There is no nanny with such id' })
   async findOne(@Param('nannyId', IsValidId) nannyId: string) {
-    const nanny = await this.nannyService.findOne(nannyId);
-    if (!nanny) {
-      throw new NotFoundException(`Nanny with id ${nannyId} is not exist`);
-    }
-    return nanny;
+    return this.nannyService.findOne(nannyId);
   }
 
   @Put(':nannyId')
@@ -148,17 +137,13 @@ export class NannyController {
   @ApiOkResponse({
     description: 'Successful response',
   })
-  @ApiBadRequestResponse({ description: 'Bad request' })
+  @ApiBadRequestResponse({ description: 'There is no nanny with such id' })
   @ApiUnauthorizedResponse({
     description:
       'Missing header with authorization token or token is not valid.',
   })
-  @ApiNotFoundResponse({ description: 'There is no nanny with such id' })
   async delete(@Param('nannyId', IsValidId) nannyId: string) {
-    const nanny = await this.nannyService.delete(nannyId);
-    if (!nanny) {
-      throw new NotFoundException(`Nanny with id ${nannyId} is not exist`);
-    }
-    return true;
+    await this.nannyService.remove(nannyId);
+    return 'success';
   }
 }

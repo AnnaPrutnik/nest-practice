@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, IsString, IsDateString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Workdays } from '../schemas/workdays.schema';
 export class CreateNannyDto {
   @ApiProperty({
@@ -78,6 +78,7 @@ export class CreateNannyDto {
     required: true,
     name: 'workdays',
     description: 'The days of the week when nanny is available',
+    type: PartialType<Workdays>,
   })
-  readonly workdays: Workdays;
+  readonly workdays: Partial<Workdays>;
 }

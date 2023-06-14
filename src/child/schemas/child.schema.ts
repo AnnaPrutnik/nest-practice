@@ -68,3 +68,7 @@ export class Child {
 }
 
 export const ChildSchema = SchemaFactory.createForClass(Child);
+
+ChildSchema.virtual('id').get(function () {
+  return this._id.toHexString();
+});

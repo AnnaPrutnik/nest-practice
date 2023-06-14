@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { WorkdaysSchema, Workdays } from './workdays.schema';
-import { Exclude } from 'class-transformer';
 
 export type NannyDocument = HydratedDocument<Nanny>;
 
@@ -87,7 +86,7 @@ export class Nanny {
     name: 'workdays',
     description: 'The days of the week when nanny is available',
   })
-  @Prop({ type: WorkdaysSchema, required: true })
+  @Prop({ type: Workdays, required: true })
   workdays: Workdays;
 
   @Prop({ default: false, select: false })
@@ -95,3 +94,7 @@ export class Nanny {
 }
 
 export const NannySchema = SchemaFactory.createForClass(Nanny);
+
+NannySchema.virtual('id').get(function () {
+  return this._id.toString();
+});

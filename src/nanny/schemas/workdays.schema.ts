@@ -12,72 +12,72 @@ export type WorkdaysDocument = HydratedDocument<Workdays>;
 export class Workdays {
   @ApiProperty({
     name: 'monday',
-    example: 'true',
-    description: 'available on monday',
+    example: true,
+    description: 'available on Monday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   monday: boolean;
 
   @ApiProperty({
     name: 'tuesday',
-    example: 'true',
-    description: 'available on tuesday',
+    example: true,
+    description: 'available on Tuesday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   tuesday: boolean;
 
   @ApiProperty({
     name: 'wednesday',
-    example: 'true',
-    description: 'available on wednesday',
+    example: true,
+    description: 'available on Wednesday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   wednesday: boolean;
 
   @ApiProperty({
     name: 'thursday',
-    example: 'true',
-    description: 'available on thursday',
+    example: true,
+    description: 'available on Thursday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   thursday: boolean;
 
   @ApiProperty({
     name: 'friday',
-    example: 'true',
-    description: 'available on friday',
+    example: true,
+    description: 'available on Friday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   friday: boolean;
 
   @ApiProperty({
     name: 'saturday',
-    example: 'true',
-    description: 'available on saturday',
+    example: true,
+    description: 'available on Saturday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   saturday: boolean;
 
   @ApiProperty({
     name: 'sunday',
-    example: 'true',
-    description: 'available on sunday',
+    example: true,
+    description: 'available on Sunday',
   })
-  @IsOptional()
   @IsBoolean()
-  @Prop({ type: Boolean, default: false })
+  @IsOptional()
+  @Prop({ type: Boolean, required: false, default: false })
   sunday: boolean;
 }
 

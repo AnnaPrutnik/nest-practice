@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Nanny } from './schemas/nanny.schema';
@@ -9,44 +13,61 @@ import { UpdateNannyDto } from './dto/update-nanny.dto';
 export class NannyService {
   constructor(@InjectModel(Nanny.name) private nannyModel: Model<Nanny>) {}
 
-  async create(body: CreateNannyDto, id: string) {
-    const existNanny = await this.nannyModel.findById(id);
+  async create(body: CreateNannyDto, userId: string) {
+    const existNanny = await this.nannyModel
+      .findById(userId)
+      .select('isDeleted');
     if (existNanny) {
       if (!existNanny.isDeleted) {
-        throw new Error('You have already registered as nanny');
+        throw new BadRequestException('You have already registered as nanny');
       }
       return this.nannyModel.findByIdAndUpdate(
-        id,
+        userId,
         { ...body, isDeleted: false },
         { new: true },
       );
     }
-    return this.nannyModel.create({ ...body, _id: id });
+
+    const nannyDoc = await this.nannyModel.create({ ...body, _id: userId });
+    const { isDeleted, _id, ...nanny } = nannyDoc.toObject();
+    return { ...nanny, id: nannyDoc.id };
   }
 
   async findAll(limit: number, page: number) {
     const skip = limit * (page - 1);
+
     const nannies = await this.nannyModel
       .find({ isDeleted: false })
       .limit(limit)
       .skip(skip)
-      .lean();
+      .exec();
 
-    const total = await this.nannyModel.find({ isDeleted: false }).count();
+    const total = await this.nannyModel.count();
     const pages = Math.ceil(total / limit);
-    return { nannies, total, page, pages };
+    return { nannies, total, page, pages, limit };
   }
 
   async findOne(nannyId: string) {
-    return this.nannyModel.findOne({ _id: nannyId, isDeleted: false });
+    const nanny = await this.nannyModel
+      .findOne({
+        _id: nannyId,
+        isDeleted: false,
+      })
+      .exec();
+
+    if (!nanny) {
+      return null;
+    }
+    return nanny.toObject();
   }
 
   async update(nannyId: string, updateNannyDto: UpdateNannyDto) {
     const nanny = await this.nannyModel
-      .findOne({ _id: nannyId, isActive: true })
+      .findOne({ _id: nannyId, isDeleted: false })
       .lean();
+
     if (!nanny) {
-      throw new Error('There is no nanny with such id');
+      throw new NotFoundException('There is no nanny with such id');
     }
     const nannyWithUpdates = {
       ...nanny,
@@ -59,9 +80,14 @@ export class NannyService {
     });
   }
 
-  async delete(nannyId: string) {
-    return this.nannyModel.findByIdAndUpdate(nannyId, {
-      isDeleted: false,
+  async remove(nannyId: string) {
+    const nanny = await this.nannyModel.findByIdAndUpdate(nannyId, {
+      isDeleted: true,
     });
+
+    if (!nanny) {
+      throw new NotFoundException(`Nanny with id ${nannyId} is not exist`);
+    }
+    return;
   }
 }

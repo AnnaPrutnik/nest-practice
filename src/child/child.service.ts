@@ -57,10 +57,12 @@ export class ChildService {
   }
 
   async findChildrenByParent(parentId: string) {
-    const children = await this.childModel.find({
-      parent: parentId,
-      isDeleted: false,
-    });
+    const children = await this.childModel
+      .find({
+        parent: parentId,
+        isDeleted: false,
+      })
+      .exec();
 
     return children
       ? children.map((child) => this.transformChildResponse(child))
