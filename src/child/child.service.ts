@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateChildDto } from './dto/create-child.dto';
@@ -42,15 +38,17 @@ export class ChildService {
           'day',
         ]);
 
+        if (isTheSameDate && !existedChild.isDeleted) {
+          throw new BadRequestException('Child has been already registered');
+        }
+
         if (isTheSameDate && existedChild.isDeleted) {
-          return this.childModel.findByIdAndUpdate(
+          const child = await this.childModel.findByIdAndUpdate(
             existedChild._id,
             { ...body, isDeleted: false },
             { new: true },
           );
-        }
-        if (isTheSameDate && !existedChild.isDeleted) {
-          throw new BadRequestException('Child has been already registered');
+          return this.transformChildResponse(child);
         }
       }
     }
@@ -66,7 +64,7 @@ export class ChildService {
 
     return children
       ? children.map((child) => this.transformChildResponse(child))
-      : null;
+      : [];
   }
 
   async findOneChild(childId: string, parentId: string) {
@@ -101,7 +99,7 @@ export class ChildService {
     );
 
     if (!updatedChild) {
-      throw new BadRequestException('No child with such id');
+      throw new BadRequestException(`No child with id ${childId}`);
     }
     return this.transformChildResponse(updatedChild);
   }
@@ -112,7 +110,7 @@ export class ChildService {
       { isDeleted: true },
     );
     if (!child) {
-      throw new BadRequestException('No child with such id');
+      throw new BadRequestException(`No child with id ${childId}`);
     }
     return;
   }

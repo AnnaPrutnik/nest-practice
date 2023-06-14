@@ -179,6 +179,17 @@ describe('ChildService', () => {
         expect(updatedChild.parent).toEqual(userId);
       });
 
+      // it('should return BadRequestException if there are validation error', async () => {
+      //   const body = {
+      //     body: 'something',
+      //     birthday: '2017-05-26',
+      //   };
+
+      //   await expect(
+      //     childService.update(testChild.id, userId.toString(), body),
+      //   );
+      // });
+
       it('should return BadRequestException if child with current id is not existed', async () => {
         const id = new mongoose.Types.ObjectId();
 

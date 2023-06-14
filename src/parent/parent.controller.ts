@@ -6,8 +6,6 @@ import {
   Put,
   Param,
   Delete,
-  BadRequestException,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -17,7 +15,6 @@ import {
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
   ApiForbiddenResponse,
-  ApiNotFoundResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
@@ -62,28 +59,18 @@ export class ParentController {
     @Body() createParentDto: CreateParentDto,
     @User() user: RequestUser,
   ) {
-    try {
-      const parent = await this.parentService.create(createParentDto, user.id);
-      return parent;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.parentService.create(createParentDto, user.id);
   }
 
   @Get(':parentId')
   //Role access: anyone
   @ApiOperation({ summary: 'Get single parent by id' })
   @ApiOkResponse({ description: 'Successful response with parent profile' })
-  @ApiNotFoundResponse({ description: 'There is no parent with such id' })
   @ApiBadRequestResponse({
     description: 'Bad request: validation error',
   })
   async findOne(@Param('parentId', IsValidId) parentId: string) {
-    const parent = await this.parentService.findOne(parentId);
-    if (!parent) {
-      throw new NotFoundException(`No parent with id ${parentId}`);
-    }
-    return parent;
+    return this.parentService.findOne(parentId);
   }
 
   @Put(':parentId')
@@ -104,12 +91,7 @@ export class ParentController {
     @Param('parentId', IsValidId) parentId: string,
     @Body() body: UpdateParentDto,
   ) {
-    try {
-      const parent = await this.parentService.update(parentId, body);
-      return parent;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.parentService.update(parentId, body);
   }
 
   @Delete(':parentId')
@@ -127,10 +109,7 @@ export class ParentController {
   })
   @Roles(Role.Admin, Role.Parent)
   async remove(@Param('parentId') parentId: string) {
-    const parent = await this.parentService.remove(parentId);
-    if (!parent) {
-      throw new NotFoundException('No parent with such id');
-    }
-    return;
+    await this.parentService.remove(parentId);
+    return 'success';
   }
 }
