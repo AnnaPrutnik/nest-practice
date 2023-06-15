@@ -48,17 +48,16 @@ export class NannyService {
   }
 
   async findOne(nannyId: string) {
-    const nanny = await this.nannyModel
-      .findOne({
-        _id: nannyId,
-        isDeleted: false,
-      })
-      .exec();
+    const nanny = await this.nannyModel.findOne({
+      _id: nannyId,
+      isDeleted: false,
+    });
 
     if (!nanny) {
       return null;
     }
-    return nanny.toObject();
+
+    return nanny;
   }
 
   async update(nannyId: string, updateNannyDto: UpdateNannyDto) {

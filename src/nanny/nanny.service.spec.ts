@@ -113,7 +113,6 @@ describe('NannyService', () => {
   describe('findOne', () => {
     it('should return nanny', async () => {
       const nanny = await nannyService.findOne(testNanny.id);
-
       expect(nanny).toMatchObject(testNanny);
     });
 

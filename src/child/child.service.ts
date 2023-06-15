@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { Child, ChildDocument } from './schemas/child.schema';
+import { IChild } from './interfaces/IChild.interface';
 
 import { DateTime } from 'luxon';
 
@@ -18,9 +19,9 @@ export class ChildService {
     return age.years;
   }
 
-  private transformChildResponse(childDoc: ChildDocument) {
-    const { isDeleted, ...child } = childDoc.toObject();
-    return { ...child, age: this.getAge(child.birthday) };
+  private transformChildResponse(childDoc: ChildDocument): IChild {
+    const { isDeleted, _id, ...child } = childDoc.toObject();
+    return { ...child, age: this.getAge(child.birthday), id: _id.toString() };
   }
 
   async create(body: CreateChildDto, userId: string) {

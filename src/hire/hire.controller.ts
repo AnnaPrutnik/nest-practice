@@ -62,12 +62,7 @@ export class HireController {
     description: 'Bad request: validation error',
   })
   async create(@Body() body: CreateHireDto, @User() user: RequestUser) {
-    try {
-      const hire = await this.hireService.create(body, user.id);
-      return hire;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.hireService.create(body, user.id);
   }
 
   @Get(':hireId')
@@ -83,11 +78,7 @@ export class HireController {
     description: 'Bad request: validation error',
   })
   async findOne(@Param('hireId', IsValidId) hireId: string) {
-    const hire = await this.hireService.getOne(hireId);
-    if (!hire) {
-      throw new BadRequestException('No hiring with such id');
-    }
-    return hire;
+    return this.hireService.getOne(hireId);
   }
 
   @Put(':hireId')
@@ -108,12 +99,7 @@ export class HireController {
     @Param('hireId', IsValidId) hireId: string,
     @Body() updateHireDto: UpdateHireDto,
   ) {
-    try {
-      const hire = await this.hireService.update(hireId, updateHireDto);
-      return hire;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return await this.hireService.update(hireId, updateHireDto);
   }
 
   @Get('cancel/:hireId')
@@ -158,17 +144,6 @@ export class HireController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('page', new DefaultValuePipe(10), ParseIntPipe) page: number,
   ) {
-    try {
-      const monthHire = await this.hireService.nannyMonthHire(
-        nannyId,
-        month,
-        limit,
-        page,
-      );
-      return monthHire;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return await this.hireService.nannyMonthHire(nannyId, month, limit, page);
   }
 }
-

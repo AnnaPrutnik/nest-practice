@@ -95,6 +95,6 @@ export class Nanny {
 
 export const NannySchema = SchemaFactory.createForClass(Nanny);
 
-NannySchema.virtual('id').get(function () {
-  return this._id.toString();
-});
+// NannySchema.virtual('id').get(function () {
+//   return this._id.toString();
+// });

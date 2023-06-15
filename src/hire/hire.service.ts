@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateHireDto } from './dto/create-hire.dto';
@@ -9,6 +13,7 @@ import { NannyService } from 'src/nanny/nanny.service';
 import { NannyDocument } from 'src/nanny/schemas/nanny.schema';
 import { Status } from 'src/common/enums/status.enum';
 import * as moment from 'moment';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class HireService {
@@ -19,9 +24,9 @@ export class HireService {
   ) {}
 
   private verifyDate(date: Date) {
-    const isFutureDate = moment().isBefore(date);
+    const isFutureDate = DateTime.now() < DateTime.fromJSDate(date);
     if (!isFutureDate) {
-      throw new Error('The date must be in the future');
+      throw new BadRequestException('The date must be in the future');
     }
     return isFutureDate;
   }
@@ -30,21 +35,33 @@ export class HireService {
     //check is such nanny exist
     const nanny = await this.nannyService.findOne(nannyId);
     if (!nanny) {
-      throw new Error('No such nanny');
+      throw new BadRequestException('No such nanny');
     }
+
     //check has nanny already hired on that day
+    const begin = DateTime.fromJSDate(date).startOf('day').toJSDate();
+    const end = DateTime.fromJSDate(date)
+      .plus({ day: 1 })
+      .startOf('day')
+      .toJSDate();
+
     const isScheduledDay = await this.hireModel.findOne({
       nanny: nannyId,
-      date: date,
+      date: {
+        $gte: begin,
+        $lt: end,
+      },
     });
+
     if (isScheduledDay) {
-      throw new Error('This day is not available');
+      throw new BadRequestException('This day is not available');
     }
+
     //check the working date in nanny schedule
-    const weekday = moment(date).format('dddd');
+    const weekday = DateTime.fromJSDate(date).setLocale('en').weekdayLong;
     const isAvailableDay = nanny.workdays[weekday.toLowerCase()];
     if (!isAvailableDay) {
-      throw new Error(`The nanny is not working on ${weekday}`);
+      throw new BadRequestException(`The nanny is not working on ${weekday}`);
     }
     return nanny;
   }
@@ -63,27 +80,33 @@ export class HireService {
     parentId: string,
   ) {
     //check children group
+
     const childGroup = children.length;
+
     if (childGroup > nanny.groupSize) {
-      throw new Error(
+      throw new BadRequestException(
         `The group of children cannot exceed ${nanny.groupSize} kids.`,
       );
     }
+
     //check is own children and also is children have acceptable age for nanny
     const ownChildren = await this.childService.findChildrenByParent(parentId);
+
     const validateAgeRange = children.every((child) => {
       const ownChild = ownChildren.find((ownChild) => ownChild.id === child);
       if (!ownChild) {
         return false;
       }
-      const age = this.childService.getAge(ownChild.birthday);
+      const age = ownChild.age;
       return age <= nanny.childMaxAge && age >= nanny.childMinAge;
     });
+
     if (!validateAgeRange) {
-      throw new Error(
+      throw new BadRequestException(
         'One or more children do not match the parent or do not meet the age requirements of the nanny. Please double-check the children array.',
       );
     }
+    return;
   }
 
   async create(body: CreateHireDto, parentId: string) {
@@ -96,13 +119,17 @@ export class HireService {
     return this.hireModel.create({ ...body, parent: parentId });
   }
 
-  getOne(hireId: string) {
-    return this.hireModel
+  async getOne(hireId: string) {
+    const hire = await this.hireModel
       .findById(hireId)
       .populate('nanny', 'firstName birthday')
       .populate('parent', 'firstName')
       .populate('children', 'name, age')
       .exec();
+    if (!hire) {
+      throw new NotFoundException('No hiring with such id');
+    }
+    return hire;
   }
 
   async update(hireId: string, updateHireDto: UpdateHireDto) {
@@ -113,7 +140,7 @@ export class HireService {
       hire.status === Status.Completed ||
       hire.status === Status.Canceled
     ) {
-      throw new Error('Hire is not available');
+      throw new BadRequestException('Hire is not available');
     }
     //check date
     let nanny: NannyDocument;
@@ -140,24 +167,33 @@ export class HireService {
     });
   }
 
-  cancel(hireId: string) {
-    return this.hireModel.findByIdAndUpdate(
+  async cancel(hireId: string) {
+    const hire = await this.hireModel.findByIdAndUpdate(
       hireId,
       {
         status: Status.Canceled,
       },
       { new: true },
     );
+    if (!hire) {
+      throw new NotFoundException(`There is no hire with id ${hireId}`);
+    }
+    return hire;
   }
 
-  close(hireId: string) {
-    return this.hireModel.findByIdAndUpdate(
+  async close(hireId: string) {
+    const hire = await this.hireModel.findByIdAndUpdate(
       hireId,
       {
         status: Status.Completed,
       },
       { new: true },
     );
+
+    if (!hire) {
+      throw new NotFoundException(`There is no hire with id ${hireId}`);
+    }
+    return hire;
   }
 
   async nannyMonthHire(
